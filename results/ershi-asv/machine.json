@@ -1,0 +1,9 @@
+{
+    "arch": "x86_64",
+    "cpu": "Intel Xeon Processor (Icelake)",
+    "machine": "ershi-asv",
+    "num_cpu": "8",
+    "os": "Linux 5.15.0-126-generic",
+    "ram": "15984056",
+    "version": 1
+}

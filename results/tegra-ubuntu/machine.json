@@ -1,0 +1,9 @@
+{
+    "arch": "aarch64",
+    "cpu": "ARMv8 Processor rev 1 (v8l)",
+    "machine": "tegra-ubuntu",
+    "num_cpu": "12",
+    "os": "Linux 5.15.148-tegra",
+    "ram": "31433644",
+    "version": 1
+}

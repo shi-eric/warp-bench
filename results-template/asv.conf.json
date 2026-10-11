@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "project": "warp-lang",
+  "project_url": "https://github.com/NVIDIA/warp",
+  "repo": "https://github.com/NVIDIA/warp.git",
+  "branches": ["main"],
+  "dvcs": "git",
+  "environment_type": "virtualenv",
+  "show_commit_url": "https://github.com/NVIDIA/warp/commit/",
+  "results_dir": "results",
+  "html_dir": "html",
+  "regressions_thresholds": {".*": 0.05, "tile\\.compile_.*": 0.10}
+}

@@ -48,11 +48,15 @@ jobs:
         id: check
         env:
           EVENT_NAME: ${{ github.event_name }}
+          MAIN_SHA: ${{ github.sha }}
         run: |
           sha=$(git -C results rev-parse HEAD)
-          published=$(curl -fsS https://shi-eric.github.io/warp-bench/build.json | jq -r '.results_sha // empty' || true)
-          echo "results=$sha published=${published:-none} event=$EVENT_NAME"
-          if [ "$sha" = "$published" ] && [ "$EVENT_NAME" = "schedule" ]; then
+          live=$(curl -fsS --max-time 20 https://shi-eric.github.io/warp-bench/build.json || true)
+          published=$(printf '%s' "$live" | jq -r '.results_sha // empty' 2>/dev/null || true)
+          published_main=$(printf '%s' "$live" | jq -r '.main_sha // empty' 2>/dev/null || true)
+          echo "results=$sha published=${published:-none} main=$MAIN_SHA published_main=${published_main:-none} event=$EVENT_NAME"
+          # Rebuild when either the results branch or main (machines.toml, tools) moved.
+          if [ "$sha" = "$published" ] && [ "$MAIN_SHA" = "$published_main" ] && [ "$EVENT_NAME" = "schedule" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -75,8 +79,10 @@ jobs:
         run: cd staged && asv publish
       - name: Write build.json
         if: steps.check.outputs.skip != 'true'
+        env:
+          MAIN_SHA: ${{ github.sha }}
         run: |
-          python -c 'import datetime, json, subprocess; sha = subprocess.check_output(["git", "-C", "results", "rev-parse", "HEAD"], text=True).strip(); json.dump({"results_sha": sha, "built_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asv": "0.6.5"}, open("staged/html/build.json", "w"))'
+          python -c 'import datetime, json, os, subprocess; sha = subprocess.check_output(["git", "-C", "results", "rev-parse", "HEAD"], text=True).strip(); json.dump({"results_sha": sha, "main_sha": os.environ["MAIN_SHA"], "built_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asv": "0.6.5"}, open("staged/html/build.json", "w"))'
       - uses: actions/upload-pages-artifact@v5
         if: steps.check.outputs.skip != 'true'
         with:

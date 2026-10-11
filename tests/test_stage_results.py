@@ -104,3 +104,19 @@ def test_regression_thresholds_preserved(tmp_path):
 def test_load_machines(tmp_path):
     cfg = sr.load_machines(_toml(tmp_path, ["a"]))
     assert cfg == {"a": sr.MachineCfg(True, 48.0, 24.0)}
+
+
+def test_corrupt_result_skipped_with_warning(tmp_path, capsys):
+    """A truncated / non-dict result must not crash staging or reach asv publish."""
+    co = _checkout(tmp_path, {"a": (5, {"version": 2})})
+    mdir = co / "results" / "a"
+    (mdir / "deadbeef-env.json").write_text('{"date": 9, "resul')
+    (mdir / "cafef00d-env.json").write_text("[1, 2]")
+    assert sr.newest_result_ms(mdir) == 5
+    out = tmp_path / "out"
+    sr.stage(co, _toml(tmp_path, ["a"]), tmp_path / "warp", out)
+    names = sorted(p.name for p in (out / "results" / "a").iterdir())
+    assert names == ["abcd1234-env.json", "machine.json"]
+    err = capsys.readouterr()
+    text = err.out + err.err
+    assert "deadbeef-env.json" in text and "cafef00d-env.json" in text

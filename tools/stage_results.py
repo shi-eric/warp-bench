@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import sys
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,12 +34,32 @@ def load_machines(path: Path) -> dict[str, MachineCfg]:
     }
 
 
+def load_json_dict(f: Path) -> dict | None:
+    """Parsed JSON object, or None (with a warning) if unreadable or not a dict.
+
+    One corrupt file (e.g. truncated by a crash on a runner) must not block
+    publishing for every machine.
+    """
+    try:
+        data = json.loads(Path(f).read_text())
+    except (OSError, UnicodeDecodeError, ValueError) as e:
+        print(f"warning: skipping unparseable result file {f}: {e}", file=sys.stderr)
+        return None
+    if not isinstance(data, dict):
+        print(f"warning: skipping result file {f}: not a JSON object", file=sys.stderr)
+        return None
+    return data
+
+
 def newest_result_ms(machine_dir: Path) -> int:
     newest = 0
     for f in Path(machine_dir).glob("*.json"):
         if f.name == "machine.json":
             continue
-        date = json.loads(f.read_text()).get("date")
+        data = load_json_dict(f)
+        if data is None:
+            continue
+        date = data.get("date")
         if isinstance(date, int) and not isinstance(date, bool):
             newest = max(newest, date)
     return newest
@@ -85,7 +106,8 @@ def stage(results_checkout: Path, machines_toml: Path, warp_clone: Path, out: Pa
             dst = out / "results" / name
             dst.mkdir(parents=True, exist_ok=True)
             for f in src.glob("*.json"):  # result files + machine.json only
-                shutil.copy2(f, dst / f.name)
+                if load_json_dict(f) is not None:
+                    shutil.copy2(f, dst / f.name)
             stamp = newest_result_ms(src)
         bench = results_checkout / "machines" / name / "benchmarks.json"
         if bench.is_file():

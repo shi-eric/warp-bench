@@ -1,0 +1,94 @@
+name: publish
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy the built dashboard to GitHub Pages
+        type: boolean
+        default: true
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          ref: results
+          path: results
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python tools/watchdog.py --results results --machines machines.toml
+
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          ref: results
+          path: results
+      - name: Check whether the published dashboard is current
+        id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          sha=$(git -C results rev-parse HEAD)
+          published=$(curl -fsS https://shi-eric.github.io/warp-bench/build.json | jq -r '.results_sha // empty' || true)
+          echo "results=$sha published=${published:-none} event=$EVENT_NAME"
+          if [ "$sha" = "$published" ] && [ "$EVENT_NAME" = "schedule" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Clone warp
+        if: steps.check.outputs.skip != 'true'
+        run: git clone --filter=blob:none https://github.com/NVIDIA/warp.git warp
+      - uses: actions/setup-python@v7
+        if: steps.check.outputs.skip != 'true'
+        with:
+          python-version: "3.12"
+      - name: Install asv
+        if: steps.check.outputs.skip != 'true'
+        run: pip install asv==0.6.5
+      - name: Stage results
+        if: steps.check.outputs.skip != 'true'
+        run: python tools/stage_results.py --results results --machines machines.toml --warp "$PWD/warp" --out staged
+      - name: asv publish
+        if: steps.check.outputs.skip != 'true'
+        run: cd staged && asv publish
+      - name: Write build.json
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          python -c 'import datetime, json, subprocess; sha = subprocess.check_output(["git", "-C", "results", "rev-parse", "HEAD"], text=True).strip(); json.dump({"results_sha": sha, "built_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "asv": "0.6.5"}, open("staged/html/build.json", "w"))'
+      - uses: actions/upload-pages-artifact@v5
+        if: steps.check.outputs.skip != 'true'
+        with:
+          path: staged/html
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.skip != 'true' && (github.event_name == 'schedule' || inputs.deploy)
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

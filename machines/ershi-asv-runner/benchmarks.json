@@ -1,0 +1,2104 @@
+{
+    "api.array.ArrayEmpty.time_empty": {
+        "code": "class ArrayEmpty:\n    def time_empty(self):\n        self.alloc = wp.empty(N, dtype=float, device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        self.alloc = None\n        gc.disable()",
+        "min_run_count": 2,
+        "name": "api.array.ArrayEmpty.time_empty",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 1000,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "934da1b05e773153255d153b02e753ee079bcd93b9a8c1632df5116b4d645a50",
+        "warmup_time": -1
+    },
+    "api.array.ArrayFree.time_ten_free_sync": {
+        "code": "class ArrayFree:\n    def time_ten_free_sync(self):\n        for i in range(len(self.allocs)):\n            self.allocs[i] = None\n        wp.synchronize_device(\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        self.test_array = wp.empty(N, dtype=float, device=\"cuda:0\")\n        self.allocs = [None] * 10\n        for i in range(len(self.allocs)):\n            self.allocs[i] = wp.empty(N, dtype=float, device=\"cuda:0\")\n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.array.ArrayFree.time_ten_free_sync",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 100,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "a34a563874c35162ad5f34c9efc862c0fea81dd41711dfdf2802c1b3ba63b456",
+        "warmup_time": -1
+    },
+    "api.array.ArrayZeros.time_zeros": {
+        "code": "class ArrayZeros:\n    def time_zeros(self):\n        self.alloc = wp.zeros(N, dtype=float, device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        self.alloc = None\n        gc.disable()",
+        "min_run_count": 2,
+        "name": "api.array.ArrayZeros.time_zeros",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 1000,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "b974a79bbc9e60a0fa44492475c7a0effc5cafa98a67f075d7d740d0bb9cf27a",
+        "warmup_time": -1
+    },
+    "api.launch.GraphLaunch.time_ten_graph": {
+        "code": "class GraphLaunch:\n    def time_ten_graph(self):\n        for _ in range(10):\n            wp.capture_launch(self.graph)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.test_array = wp.zeros(N, dtype=float, device=\"cuda:0\")\n        self.stream = wp.Stream(\"cuda:0\")\n    \n        # capture graph\n        with wp.ScopedCapture(device=\"cuda:0\") as capture:\n            wp.launch(inc_kernel, (N,), inputs=[self.test_array])\n    \n        self.graph = capture.graph\n    \n        # Warmup\n        for _ in range(5):\n            wp.capture_launch(self.graph)\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.GraphLaunch.time_ten_graph",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "4f68dfdc3d28e61418b060e3103fd25a50418150139d78830f2de1c7e0d905e5",
+        "warmup_time": -1
+    },
+    "api.launch.GraphLaunch.time_ten_graph_on_stream": {
+        "code": "class GraphLaunch:\n    def time_ten_graph_on_stream(self):\n        for _ in range(10):\n            wp.capture_launch(self.graph, stream=self.stream)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.test_array = wp.zeros(N, dtype=float, device=\"cuda:0\")\n        self.stream = wp.Stream(\"cuda:0\")\n    \n        # capture graph\n        with wp.ScopedCapture(device=\"cuda:0\") as capture:\n            wp.launch(inc_kernel, (N,), inputs=[self.test_array])\n    \n        self.graph = capture.graph\n    \n        # Warmup\n        for _ in range(5):\n            wp.capture_launch(self.graph)\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.GraphLaunch.time_ten_graph_on_stream",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "bde8bc822d32b09255c82bbc0382562f3ff52f88ba4fc8589cd90ea3cdcc93d8",
+        "warmup_time": -1
+    },
+    "api.launch.KernelLaunch.time_launch_object": {
+        "code": "class KernelLaunch:\n    def time_launch_object(self):\n        \"\"\"Time a kernel launch from a stored launch object.\n    \n        A synchronize at the end of the function is intentionally omitted.\n        \"\"\"\n    \n        self.cmd.launch()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.test_array = wp.zeros(N, dtype=float, device=\"cuda:0\")\n        self.stream = wp.Stream(\"cuda:0\")\n        self.cmd = wp.launch(inc_kernel, (N,), inputs=[self.test_array], record_cmd=True)\n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.KernelLaunch.time_launch_object",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "765d709e78ac1cc950eef88adff1bafa1e07fe3850beb2ddad899256013696c2",
+        "warmup_time": -1
+    },
+    "api.launch.KernelLaunch.time_launch_on_stream": {
+        "code": "class KernelLaunch:\n    def time_launch_on_stream(self):\n        \"\"\"Time a kernel launch on a specified stream.\n    \n        A synchronize at the end of the function is intentionally omitted.\n        \"\"\"\n    \n        wp.launch(inc_kernel, (N,), inputs=[self.test_array], stream=self.stream)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.test_array = wp.zeros(N, dtype=float, device=\"cuda:0\")\n        self.stream = wp.Stream(\"cuda:0\")\n        self.cmd = wp.launch(inc_kernel, (N,), inputs=[self.test_array], record_cmd=True)\n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.KernelLaunch.time_launch_on_stream",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "9e0580165cc5daa7f135a39939da1c185a3461406080f066034722a7a3cfc148",
+        "warmup_time": -1
+    },
+    "api.launch.KernelLaunch.time_standard_launch": {
+        "code": "class KernelLaunch:\n    def time_standard_launch(self):\n        \"\"\"Time a standard kernel launch.\n    \n        A synchronize at the end of the function is intentionally omitted.\n        \"\"\"\n    \n        wp.launch(inc_kernel, (N,), inputs=[self.test_array])\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.test_array = wp.zeros(N, dtype=float, device=\"cuda:0\")\n        self.stream = wp.Stream(\"cuda:0\")\n        self.cmd = wp.launch(inc_kernel, (N,), inputs=[self.test_array], record_cmd=True)\n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.KernelLaunch.time_standard_launch",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "b6effb22a1c8415dbf0fb78dc03e875fe7d8b0232deaf1ed5ce333a2720dbf5b",
+        "warmup_time": -1
+    },
+    "api.launch.KernelLaunchParameters.time_direct_empty": {
+        "code": "class KernelLaunchParameters:\n    def time_direct_empty(self):\n        wp.launch(k0, dim=1, inputs=[], device=\"cuda:0\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        n = 1\n        self.a = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.b = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.c = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.x = 17.0\n        self.y = 42.0\n        self.z = 99.0\n        self.u = wp.vec3(1, 2, 3)\n        self.v = wp.vec3(10, 20, 30)\n        self.w = wp.vec3(100, 200, 300)\n    \n        sz = Sz()\n        sz.a = self.a\n        sz.b = self.b\n        sz.c = self.c\n        sz.x = self.x\n        sz.y = self.y\n        sz.z = self.z\n        sz.u = self.u\n        sz.v = self.v\n        sz.w = self.w\n        self.sz = sz\n    \n        self.s0 = S0()\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.KernelLaunchParameters.time_direct_empty",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "0f512b812e70f70dac277510121ba4e688f0b49c953c43204cd2c0f997c6fc07",
+        "warmup_time": -1
+    },
+    "api.launch.KernelLaunchParameters.time_direct_empty_2d": {
+        "code": "class KernelLaunchParameters:\n    def time_direct_empty_2d(self):\n        \"\"\"Measure host overhead for a two-dimensional kernel launch.\"\"\"\n        wp.launch(k0_2d, dim=(1, 1), inputs=[], device=\"cuda:0\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        n = 1\n        self.a = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.b = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.c = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.x = 17.0\n        self.y = 42.0\n        self.z = 99.0\n        self.u = wp.vec3(1, 2, 3)\n        self.v = wp.vec3(10, 20, 30)\n        self.w = wp.vec3(100, 200, 300)\n    \n        sz = Sz()\n        sz.a = self.a\n        sz.b = self.b\n        sz.c = self.c\n        sz.x = self.x\n        sz.y = self.y\n        sz.z = self.z\n        sz.u = self.u\n        sz.v = self.v\n        sz.w = self.w\n        self.sz = sz\n    \n        self.s0 = S0()\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.KernelLaunchParameters.time_direct_empty_2d",
+        "number": 20,
+        "param_names": [],
+        "params": [],
+        "repeat": 20,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "5a23796be156ea78f715892451ecf66bd4bd23091fec83a5d25b5282ef108355",
+        "warmup_time": -1
+    },
+    "api.launch.KernelLaunchParameters.time_direct_empty_4d": {
+        "code": "class KernelLaunchParameters:\n    def time_direct_empty_4d(self):\n        \"\"\"Measure host overhead for a four-dimensional kernel launch.\"\"\"\n        wp.launch(k0_4d, dim=(1, 1, 1, 1), inputs=[], device=\"cuda:0\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        n = 1\n        self.a = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.b = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.c = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.x = 17.0\n        self.y = 42.0\n        self.z = 99.0\n        self.u = wp.vec3(1, 2, 3)\n        self.v = wp.vec3(10, 20, 30)\n        self.w = wp.vec3(100, 200, 300)\n    \n        sz = Sz()\n        sz.a = self.a\n        sz.b = self.b\n        sz.c = self.c\n        sz.x = self.x\n        sz.y = self.y\n        sz.z = self.z\n        sz.u = self.u\n        sz.v = self.v\n        sz.w = self.w\n        self.sz = sz\n    \n        self.s0 = S0()\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.KernelLaunchParameters.time_direct_empty_4d",
+        "number": 20,
+        "param_names": [],
+        "params": [],
+        "repeat": 20,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "fcb1d7d505af1073e21796578318a25ac113318b9150fff0cd7645226a90d2ff",
+        "warmup_time": -1
+    },
+    "api.launch.KernelLaunchParameters.time_direct_empty_no_tid": {
+        "code": "class KernelLaunchParameters:\n    def time_direct_empty_no_tid(self):\n        \"\"\"Measure an empty direct launch that does not consume ``wp.tid()``.\"\"\"\n        wp.launch(k0_no_tid, dim=1, inputs=[], device=\"cuda:0\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        n = 1\n        self.a = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.b = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.c = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.x = 17.0\n        self.y = 42.0\n        self.z = 99.0\n        self.u = wp.vec3(1, 2, 3)\n        self.v = wp.vec3(10, 20, 30)\n        self.w = wp.vec3(100, 200, 300)\n    \n        sz = Sz()\n        sz.a = self.a\n        sz.b = self.b\n        sz.c = self.c\n        sz.x = self.x\n        sz.y = self.y\n        sz.z = self.z\n        sz.u = self.u\n        sz.v = self.v\n        sz.w = self.w\n        self.sz = sz\n    \n        self.s0 = S0()\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.KernelLaunchParameters.time_direct_empty_no_tid",
+        "number": 2000,
+        "param_names": [],
+        "params": [],
+        "repeat": 20,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "402208be83f8b30e968c1dc29cf4512f17900f5b1cf80b84513ad0d0ffd96e3c",
+        "warmup_time": -1
+    },
+    "api.launch.KernelLaunchParameters.time_direct_full": {
+        "code": "class KernelLaunchParameters:\n    def time_direct_full(self):\n        wp.launch(\n            kz, dim=1, inputs=[self.a, self.b, self.c, self.x, self.y, self.z, self.u, self.v, self.w], device=\"cuda:0\"\n        )\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        n = 1\n        self.a = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.b = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.c = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.x = 17.0\n        self.y = 42.0\n        self.z = 99.0\n        self.u = wp.vec3(1, 2, 3)\n        self.v = wp.vec3(10, 20, 30)\n        self.w = wp.vec3(100, 200, 300)\n    \n        sz = Sz()\n        sz.a = self.a\n        sz.b = self.b\n        sz.c = self.c\n        sz.x = self.x\n        sz.y = self.y\n        sz.z = self.z\n        sz.u = self.u\n        sz.v = self.v\n        sz.w = self.w\n        self.sz = sz\n    \n        self.s0 = S0()\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.KernelLaunchParameters.time_direct_full",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "3dce1e1a92e42b6b6653bddb2e2c80bc36a6db2539de6e2e2b68608742e22e2d",
+        "warmup_time": -1
+    },
+    "api.launch.KernelLaunchParameters.time_struct_empty": {
+        "code": "class KernelLaunchParameters:\n    def time_struct_empty(self):\n        wp.launch(ks0, dim=1, inputs=[self.s0], device=\"cuda:0\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        n = 1\n        self.a = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.b = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.c = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.x = 17.0\n        self.y = 42.0\n        self.z = 99.0\n        self.u = wp.vec3(1, 2, 3)\n        self.v = wp.vec3(10, 20, 30)\n        self.w = wp.vec3(100, 200, 300)\n    \n        sz = Sz()\n        sz.a = self.a\n        sz.b = self.b\n        sz.c = self.c\n        sz.x = self.x\n        sz.y = self.y\n        sz.z = self.z\n        sz.u = self.u\n        sz.v = self.v\n        sz.w = self.w\n        self.sz = sz\n    \n        self.s0 = S0()\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.KernelLaunchParameters.time_struct_empty",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "92ac0eea88e7890a6afc25022a4ccc29c2691df650fca127a2d23333c5994576",
+        "warmup_time": -1
+    },
+    "api.launch.KernelLaunchParameters.time_struct_full": {
+        "code": "class KernelLaunchParameters:\n    def time_struct_full(self):\n        wp.launch(ksz, dim=1, inputs=[self.sz], device=\"cuda:0\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        n = 1\n        self.a = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.b = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.c = wp.zeros(n, dtype=float, device=\"cuda:0\")\n        self.x = 17.0\n        self.y = 42.0\n        self.z = 99.0\n        self.u = wp.vec3(1, 2, 3)\n        self.v = wp.vec3(10, 20, 30)\n        self.w = wp.vec3(100, 200, 300)\n    \n        sz = Sz()\n        sz.a = self.a\n        sz.b = self.b\n        sz.c = self.c\n        sz.x = self.x\n        sz.y = self.y\n        sz.z = self.z\n        sz.u = self.u\n        sz.v = self.v\n        sz.w = self.w\n        self.sz = sz\n    \n        self.s0 = S0()\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.KernelLaunchParameters.time_struct_full",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "d2a87f8a6c0425bbbe076d803d8ecc1eb3694a725a9d66b8073a2893a87b9462",
+        "warmup_time": -1
+    },
+    "api.launch.ThreadCoordinateReconstruction.time_cuda": {
+        "code": "class ThreadCoordinateReconstruction:\n    def time_cuda(self, rank):\n        self.cmd.launch()\n        wp.synchronize_device(\"cuda:0\")\n\n    @setup_once\n    def setup(self, rank):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.output = wp.empty(1024 * 1024, dtype=int, device=\"cuda:0\")\n        if rank == \"2d\":\n            kernel = write_tid_2d\n            dim = (1024, 1024)\n        else:\n            kernel = write_tid_4d\n            dim = (32, 32, 32, 32)\n    \n        self.cmd = wp.launch(kernel, dim=dim, outputs=[self.output], device=\"cuda:0\", record_cmd=True)\n        self.cmd.launch()\n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "api.launch.ThreadCoordinateReconstruction.time_cuda",
+        "number": 1,
+        "param_names": [
+            "rank"
+        ],
+        "params": [
+            [
+                "'2d'",
+                "'4d'"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "e79b03624b0fc8d29f71461acc5b8ac6c7f208c45d0c986382b83de2df22ae6c",
+        "warmup_time": -1
+    },
+    "api.python_builtins.PythonBuiltins.time_call_builtin_mul_op": {
+        "code": "class PythonBuiltins:\n    def time_call_builtin_mul_op(self):\n        mat * mat\n\n    def setup(self):\n        wp.init()",
+        "min_run_count": 2,
+        "name": "api.python_builtins.PythonBuiltins.time_call_builtin_mul_op",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 1000,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "a5d1062d3c6801a70dc31ad4b1a2bdf530369cd51057f079ddf16d56dcbe08f5",
+        "warmup_time": -1
+    },
+    "api.python_builtins.PythonBuiltins.time_call_builtin_synthetic_workload": {
+        "code": "class PythonBuiltins:\n    def time_call_builtin_synthetic_workload(self):\n        value = wp.min(wp.max(1.0, 2.0), 3.0)\n        point = wp.vec3(*range(3))\n    \n        mat1 = wp.transpose(mat)\n        mat2 = mat * mat * value\n    \n        xform1 = wp.transform_identity()\n        xform2 = wp.transform_inverse(xform1)\n        xform3 = xform * xform * value\n    \n        dot = wp.ddot(mat1, mat2)\n        point = wp.transform_point(wp.inverse(mat1) * mat2, point * dot)\n        pos = wp.transform_get_translation(xform2)\n        rot = wp.transform_get_rotation(xform3)\n        coeff = wp.exp(-wp.length(point))\n        rot *= wp.quat_from_axis_angle(\n            wp.vec3(1.0, 0.0, 0.0),\n            wp.radians(coeff * value),\n        )\n        point = wp.quat_rotate(rot, point + pos)\n\n    def setup(self):\n        wp.init()",
+        "min_run_count": 2,
+        "name": "api.python_builtins.PythonBuiltins.time_call_builtin_synthetic_workload",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 1000,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "b218a6457119b34735e2e7051603fa2237dd91335671b68d9862c0a5dc593dac",
+        "warmup_time": -1
+    },
+    "api.python_builtins.PythonBuiltins.time_call_builtin_transform_identity_fn": {
+        "code": "class PythonBuiltins:\n    def time_call_builtin_transform_identity_fn(self):\n        wp.transform_identity()\n\n    def setup(self):\n        wp.init()",
+        "min_run_count": 2,
+        "name": "api.python_builtins.PythonBuiltins.time_call_builtin_transform_identity_fn",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 1000,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "e6ffdc8a0a41813b981ad87f4cfafa6a20c5ff2a49b5a799016507991fe503eb",
+        "warmup_time": -1
+    },
+    "api.struct.StructSetup.time_construct_complex": {
+        "code": "class StructSetup:\n    def time_construct_complex(self):\n        \"\"\"\n        Time constructing a complex struct.\n        \"\"\"\n        D()\n\n    def setup(self):\n        wp.init()\n    \n        self._vec = wp.vec3(1, 2, 3)\n        self._mat = wp.mat33(1, 2, 3, 4, 5, 6, 7, 8, 9)\n        self._array = wp.zeros(10, dtype=float, device=\"cpu\")\n        self._array2d = wp.zeros((10, 10), dtype=int, device=\"cpu\")\n    \n        self.a = A()\n        self.d = D()",
+        "min_run_count": 2,
+        "name": "api.struct.StructSetup.time_construct_complex",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "3826dd627578f41cb6a6c89829efac77b88f721c465e5fab439d98b00c4913ff",
+        "warmup_time": -1
+    },
+    "api.struct.StructSetup.time_construct_simple": {
+        "code": "class StructSetup:\n    def time_construct_simple(self):\n        \"\"\"\n        Time constructing a simple struct.\n        \"\"\"\n        A()\n\n    def setup(self):\n        wp.init()\n    \n        self._vec = wp.vec3(1, 2, 3)\n        self._mat = wp.mat33(1, 2, 3, 4, 5, 6, 7, 8, 9)\n        self._array = wp.zeros(10, dtype=float, device=\"cpu\")\n        self._array2d = wp.zeros((10, 10), dtype=int, device=\"cpu\")\n    \n        self.a = A()\n        self.d = D()",
+        "min_run_count": 2,
+        "name": "api.struct.StructSetup.time_construct_simple",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "d95db84e1fab0369c4f535d6002caae54785b6650468a6e7962df15665edbef4",
+        "warmup_time": -1
+    },
+    "api.struct.StructSetup.time_fill_complex": {
+        "code": "class StructSetup:\n    def time_fill_complex(self):\n        \"\"\"\n        Time filling a complex struct.\n        \"\"\"\n        self.fill_D(self.d)\n\n    def setup(self):\n        wp.init()\n    \n        self._vec = wp.vec3(1, 2, 3)\n        self._mat = wp.mat33(1, 2, 3, 4, 5, 6, 7, 8, 9)\n        self._array = wp.zeros(10, dtype=float, device=\"cpu\")\n        self._array2d = wp.zeros((10, 10), dtype=int, device=\"cpu\")\n    \n        self.a = A()\n        self.d = D()",
+        "min_run_count": 2,
+        "name": "api.struct.StructSetup.time_fill_complex",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "007a0876a15ec9ace36221d598e588af4975d5633b83f73963e116908383b4d8",
+        "warmup_time": -1
+    },
+    "api.struct.StructSetup.time_fill_simple": {
+        "code": "class StructSetup:\n    def time_fill_simple(self):\n        \"\"\"\n        Time filling a simple struct.\n        \"\"\"\n        self.fill_A(self.a)\n\n    def setup(self):\n        wp.init()\n    \n        self._vec = wp.vec3(1, 2, 3)\n        self._mat = wp.mat33(1, 2, 3, 4, 5, 6, 7, 8, 9)\n        self._array = wp.zeros(10, dtype=float, device=\"cpu\")\n        self._array2d = wp.zeros((10, 10), dtype=int, device=\"cpu\")\n    \n        self.a = A()\n        self.d = D()",
+        "min_run_count": 2,
+        "name": "api.struct.StructSetup.time_fill_simple",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "32067573958e0020690c6e8bfc00a0d81f09d5e98d60cdf8d3bd6e45facb92f8",
+        "warmup_time": -1
+    },
+    "atomics.AtomicMax.time_cuda": {
+        "code": "class AtomicMax:\n    def time_cuda(self, vals_np_dict, dtype_str):\n        self.out.fill_(self.init_value)\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    def setup(self, vals_np_dict, dtype_str):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        dtype = DTYPE_MAP[dtype_str]\n    \n        self.init_value = MAX_INIT[dtype_str]\n        self.vals, self.out, self.cmd = _get_launch(\n            max_kernel, vals_np_dict[dtype_str], dtype, self.device, self.init_value\n        )\n\n    def setup_cache(self):\n        rng = np.random.default_rng(42)\n        # Generate vals_np for each dtype in DTYPE_MAP\n        vals_np_dict = {}\n        for dtype_str_key, dtype in DTYPE_MAP.items():\n            if dtype == wp.float32:\n                vals_np = rng.random(self.num_elements).astype(np.float32)\n            elif dtype == wp.int32:\n                vals_np = rng.integers(0, 2**31 - 1, size=self.num_elements, dtype=np.int32)\n            else:\n                vals_np = None\n            vals_np_dict[dtype_str_key] = vals_np\n    \n        return vals_np_dict",
+        "min_run_count": 2,
+        "name": "atomics.AtomicMax.time_cuda",
+        "number": 15,
+        "param_names": [
+            "dtype"
+        ],
+        "params": [
+            [
+                "'float32'",
+                "'int32'"
+            ]
+        ],
+        "repeat": 50,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "setup_cache_key": "atomics:106",
+        "type": "time",
+        "unit": "seconds",
+        "version": "e26cc540ff36f9c6bac4dd5191cd19f3e13946bd1b9b40c908a6cb14b8b18aae",
+        "warmup_time": -1
+    },
+    "atomics.AtomicMin.time_cuda": {
+        "code": "class AtomicMin:\n    def time_cuda(self, vals_np_dict, dtype_str):\n        self.out.fill_(self.init_value)\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    def setup(self, vals_np_dict, dtype_str):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        dtype = DTYPE_MAP[dtype_str]\n    \n        self.init_value = MIN_INIT[dtype_str]\n        self.vals, self.out, self.cmd = _get_launch(\n            min_kernel, vals_np_dict[dtype_str], dtype, self.device, self.init_value\n        )\n\n    def setup_cache(self):\n        rng = np.random.default_rng(42)\n        # Generate vals_np for each dtype in DTYPE_MAP\n        vals_np_dict = {}\n        for dtype_str_key, dtype in DTYPE_MAP.items():\n            if dtype == wp.float32:\n                vals_np = rng.random(NUM_ELEMENTS).astype(np.float32)\n            elif dtype == wp.int32:\n                vals_np = rng.integers(0, 2**31 - 1, size=NUM_ELEMENTS, dtype=np.int32)\n            else:\n                vals_np = None\n            vals_np_dict[dtype_str_key] = vals_np\n    \n        return vals_np_dict",
+        "min_run_count": 2,
+        "name": "atomics.AtomicMin.time_cuda",
+        "number": 25,
+        "param_names": [
+            "dtype"
+        ],
+        "params": [
+            [
+                "'float32'",
+                "'int32'"
+            ]
+        ],
+        "repeat": 100,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "setup_cache_key": "atomics:150",
+        "type": "time",
+        "unit": "seconds",
+        "version": "9bf718a12a4d11d0d4e95b44ba01665dd78a42fc19551ab73339802a6b45963b",
+        "warmup_time": -1
+    },
+    "bvh_build.BvhBuild.time_build": {
+        "code": "class BvhBuild:\n    @skip_benchmark_if(USD_AVAILABLE is False)\n    @skip_for_params([(\"median\", \"bear\")])\n    def time_build(self, asset_data, method, asset):\n        _bvh = wp.Bvh(self.lowers, self.uppers, constructor=method)\n        wp.synchronize_device(self.device)\n\n    def setup(self, asset_data, method, asset):\n        self.device = wp.get_device(\"cuda:0\")\n    \n        # Get pre-computed AABB numpy arrays and transfer to GPU\n        lowers_np = asset_data[asset][\"lowers_np\"]\n        uppers_np = asset_data[asset][\"uppers_np\"]\n    \n        self.lowers = wp.array(lowers_np, dtype=wp.vec3, device=self.device)\n        self.uppers = wp.array(uppers_np, dtype=wp.vec3, device=self.device)\n        wp.synchronize_device(self.device)\n\n    def setup_cache(self):\n        from pxr import Usd, UsdGeom\n    \n        wp.init()\n    \n        # Load and parse USD assets once, compute AABBs, cache as numpy arrays\n        asset_data = {}\n        for asset_name in self.assets:\n            asset_stage = Usd.Stage.Open(os.path.join(get_asset_directory(), f\"{asset_name}.usd\"))\n            mesh_geom = UsdGeom.Mesh(asset_stage.GetPrimAtPath(f\"/root/{asset_name}\"))\n    \n            points_np = np.array(mesh_geom.GetPointsAttr().Get())\n            indices_np = np.array(mesh_geom.GetFaceVertexIndicesAttr().Get())\n    \n            # Compute AABBs on GPU\n            with wp.ScopedDevice(\"cuda:0\"):\n                points = wp.array(points_np, dtype=wp.vec3)\n                indices = wp.array(indices_np, dtype=wp.int32)\n                num_faces = int(indices.shape[0] / 3)\n    \n                lowers = wp.zeros(num_faces, dtype=wp.vec3)\n                uppers = wp.zeros(num_faces, dtype=wp.vec3)\n    \n                wp.launch(\n                    dim=num_faces,\n                    kernel=compute_tri_aabbs,\n                    inputs=[points, indices],\n                    outputs=[lowers, uppers],\n                )\n    \n                # Convert to numpy for serialization\n                asset_data[asset_name] = {\n                    \"lowers_np\": lowers.numpy(),\n                    \"uppers_np\": uppers.numpy(),\n                }\n    \n        return asset_data",
+        "min_run_count": 2,
+        "name": "bvh_build.BvhBuild.time_build",
+        "number": 5,
+        "param_names": [
+            "method",
+            "asset"
+        ],
+        "params": [
+            [
+                "'median'",
+                "'lbvh'"
+            ],
+            [
+                "'bunny'",
+                "'bear'",
+                "'rocks'"
+            ]
+        ],
+        "repeat": 100,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "setup_cache_key": "bvh_build:47",
+        "type": "time",
+        "unit": "seconds",
+        "version": "5dbb8d4735437fa00e27543e759cfd28074e5e9f164c1eb0d9d707dbd3f8e395",
+        "warmup_time": 0.5
+    },
+    "codegen.array2d_augassign.CompileModule.time_cpu_codegen": {
+        "code": "class CompileModule:\n    def time_cpu_codegen(self):\n        wp.load_module(device=\"cpu\")\n\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()",
+        "min_run_count": 2,
+        "name": "codegen.array2d_augassign.CompileModule.time_cpu_codegen",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "624daba4e1d369787472b6ac8a66cc699d3dcc13ac5875b20a9bc0445606141c",
+        "warmup_time": -1
+    },
+    "codegen.array2d_augassign.CompileModule.time_cuda_codegen": {
+        "code": "class CompileModule:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()",
+        "min_run_count": 2,
+        "name": "codegen.array2d_augassign.CompileModule.time_cuda_codegen",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "38b2760c7a401ce7d976de2728c62f210f68a789ca84f80cd47ea13e7422b5f7",
+        "warmup_time": -1
+    },
+    "codegen.array2d_augassign.RunBackwardKernel.track_cuda": {
+        "code": "class RunBackwardKernel:\n    def track_cuda(self):\n        with wp.ScopedTimer(\"benchmark\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(1000):\n                wp.launch(\n                    array2d_augassign_kernel,\n                    self.x.shape,\n                    inputs=[self.x, self.y],\n                    adj_inputs=[self.x.grad, self.y.grad],\n                    adj_outputs=[],\n                    adjoint=True,\n                    device=\"cuda:0\",\n                )\n    \n        average = sum(result.elapsed for result in timer.timing_results) / len(timer.timing_results)\n    \n        return average * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        N = (1024, 1024)\n        self.x = wp.ones(N, dtype=float, device=\"cuda:0\", requires_grad=True)\n        self.y = wp.ones(N, dtype=float, device=\"cuda:0\", requires_grad=True)\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.array2d_augassign.RunBackwardKernel.track_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "89856052e087b1a4549958fb56ed07e432735f0711348f46b0d85caced660ebb"
+    },
+    "codegen.array2d_augassign.RunForwardKernel.track_cuda": {
+        "code": "class RunForwardKernel:\n    def track_cuda(self):\n        with wp.ScopedTimer(\"benchmark\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(1000):\n                wp.launch(array2d_augassign_kernel, self.x.shape, inputs=[self.x, self.y], device=\"cuda:0\")\n    \n        average = sum(result.elapsed for result in timer.timing_results) / len(timer.timing_results)\n    \n        return average * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        N = (1024, 1024)\n        self.x = wp.ones(N, dtype=float, device=\"cuda:0\")\n        self.y = wp.ones(N, dtype=float, device=\"cuda:0\")\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.array2d_augassign.RunForwardKernel.track_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "b9c7c4d4a70a145ead3d07ac427eb2ed983b536575ba9d3e4c51f3320b9b8ab7"
+    },
+    "codegen.composite_component_mat44.RunKernel.track_backward_cuda": {
+        "code": "class RunKernel:\n    def track_backward_cuda(self):\n        with wp.ScopedTimer(\"bench\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(10000):\n                wp.launch(\n                    mat44_multi_elem,\n                    self.n,\n                    inputs=[self.dst, self.src],\n                    adj_inputs=[self.dst.grad, self.src.grad],\n                    adj_outputs=[],\n                    adjoint=True,\n                    device=\"cuda:0\",\n                )\n        return median(r.elapsed for r in timer.timing_results) * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.n = 1 << 20\n        self.dst = wp.zeros(self.n, dtype=wp.mat44, device=\"cuda:0\", requires_grad=True)\n        self.src = wp.ones(self.n, dtype=wp.float32, device=\"cuda:0\", requires_grad=True)\n        self.cmd_fwd = wp.launch(\n            mat44_multi_elem, self.n, inputs=[self.dst, self.src], device=\"cuda:0\", record_cmd=True\n        )\n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.composite_component_mat44.RunKernel.track_backward_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "f7c4080e88c0a88034b3eaa542959b1f9a2f0c7d10adc24f3e653c326190efd2"
+    },
+    "codegen.composite_component_mat44.RunKernel.track_forward_cuda": {
+        "code": "class RunKernel:\n    def track_forward_cuda(self):\n        with wp.ScopedTimer(\"bench\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(10000):\n                self.cmd_fwd.launch()\n        return median(r.elapsed for r in timer.timing_results) * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.n = 1 << 20\n        self.dst = wp.zeros(self.n, dtype=wp.mat44, device=\"cuda:0\", requires_grad=True)\n        self.src = wp.ones(self.n, dtype=wp.float32, device=\"cuda:0\", requires_grad=True)\n        self.cmd_fwd = wp.launch(\n            mat44_multi_elem, self.n, inputs=[self.dst, self.src], device=\"cuda:0\", record_cmd=True\n        )\n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.composite_component_mat44.RunKernel.track_forward_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "361684c0e5c4112b24ca572f18b98bb22eb251af7b9fe5a68851b62a44a8de1d"
+    },
+    "codegen.composite_component_struct.RunKernel.track_backward_cuda": {
+        "code": "class RunKernel:\n    def track_backward_cuda(self):\n        with wp.ScopedTimer(\"bench\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(10000):\n                wp.launch(\n                    state_multi_field,\n                    self.n,\n                    inputs=[self.dst, self.p, self.v, self.q, self.m],\n                    adj_inputs=[self.dst.grad, self.p.grad, self.v.grad, self.q.grad, self.m.grad],\n                    adj_outputs=[],\n                    adjoint=True,\n                    device=\"cuda:0\",\n                )\n        return median(r.elapsed for r in timer.timing_results) * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.n = 1 << 20\n        self.dst = wp.zeros(self.n, dtype=StateStruct, device=\"cuda:0\", requires_grad=True)\n        self.p = wp.ones(self.n, dtype=wp.vec3, device=\"cuda:0\", requires_grad=True)\n        self.v = wp.ones(self.n, dtype=wp.vec3, device=\"cuda:0\", requires_grad=True)\n        self.q = wp.ones(self.n, dtype=wp.quatf, device=\"cuda:0\", requires_grad=True)\n        self.m = wp.ones(self.n, dtype=wp.float32, device=\"cuda:0\", requires_grad=True)\n        self.cmd_fwd = wp.launch(\n            state_multi_field,\n            self.n,\n            inputs=[self.dst, self.p, self.v, self.q, self.m],\n            device=\"cuda:0\",\n            record_cmd=True,\n        )\n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.composite_component_struct.RunKernel.track_backward_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "258898ccb422c0464e1043a46a61db6767b9d4ced8c9776d0d3e8f1c42d1c5ab"
+    },
+    "codegen.composite_component_struct.RunKernel.track_forward_cuda": {
+        "code": "class RunKernel:\n    def track_forward_cuda(self):\n        with wp.ScopedTimer(\"bench\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(10000):\n                self.cmd_fwd.launch()\n        return median(r.elapsed for r in timer.timing_results) * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.n = 1 << 20\n        self.dst = wp.zeros(self.n, dtype=StateStruct, device=\"cuda:0\", requires_grad=True)\n        self.p = wp.ones(self.n, dtype=wp.vec3, device=\"cuda:0\", requires_grad=True)\n        self.v = wp.ones(self.n, dtype=wp.vec3, device=\"cuda:0\", requires_grad=True)\n        self.q = wp.ones(self.n, dtype=wp.quatf, device=\"cuda:0\", requires_grad=True)\n        self.m = wp.ones(self.n, dtype=wp.float32, device=\"cuda:0\", requires_grad=True)\n        self.cmd_fwd = wp.launch(\n            state_multi_field,\n            self.n,\n            inputs=[self.dst, self.p, self.v, self.q, self.m],\n            device=\"cuda:0\",\n            record_cmd=True,\n        )\n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.composite_component_struct.RunKernel.track_forward_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "cd83f74ae08ac3d1e834ec634112e038e9e6e7f531a8dc4939c859b2fd39262d"
+    },
+    "codegen.composite_component_vec3.RunKernel.track_backward_cuda": {
+        "code": "class RunKernel:\n    def track_backward_cuda(self):\n        with wp.ScopedTimer(\"bench\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(10000):\n                wp.launch(\n                    vec3_triple_slot,\n                    self.n,\n                    inputs=[self.dst, self.src],\n                    adj_inputs=[self.dst.grad, self.src.grad],\n                    adj_outputs=[],\n                    adjoint=True,\n                    device=\"cuda:0\",\n                )\n        return median(r.elapsed for r in timer.timing_results) * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.n = 1 << 20\n        self.dst = wp.zeros(self.n, dtype=wp.vec3, device=\"cuda:0\", requires_grad=True)\n        self.src = wp.ones(self.n, dtype=wp.float32, device=\"cuda:0\", requires_grad=True)\n        self.cmd_fwd = wp.launch(\n            vec3_triple_slot, self.n, inputs=[self.dst, self.src], device=\"cuda:0\", record_cmd=True\n        )\n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.composite_component_vec3.RunKernel.track_backward_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "bf72c620406e9665ca6acc2fc3a4d83e9d437bbc53997aeb13f251e3b96aa67f"
+    },
+    "codegen.composite_component_vec3.RunKernel.track_forward_cuda": {
+        "code": "class RunKernel:\n    def track_forward_cuda(self):\n        with wp.ScopedTimer(\"bench\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(10000):\n                self.cmd_fwd.launch()\n        return median(r.elapsed for r in timer.timing_results) * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n        self.n = 1 << 20\n        self.dst = wp.zeros(self.n, dtype=wp.vec3, device=\"cuda:0\", requires_grad=True)\n        self.src = wp.ones(self.n, dtype=wp.float32, device=\"cuda:0\", requires_grad=True)\n        self.cmd_fwd = wp.launch(\n            vec3_triple_slot, self.n, inputs=[self.dst, self.src], device=\"cuda:0\", record_cmd=True\n        )\n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.composite_component_vec3.RunKernel.track_forward_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "33746da0dc40a32d8a200f1f76f1674f50fe7961ccbed0d397446cbebc519507"
+    },
+    "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_large": {
+        "code": "class DeclareUniqueModuleKernel:\n    def time_declare_large(self):\n        wp.kernel(self._large, module=\"unique\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self._small = small_sparse_mv\n        self._medium = medium_bound_project\n        self._large = large_equality_flex\n        # Warm linecache and first-module registration so samples reflect the\n        # steady-state per-kernel declaration cost rather than one-time setup.\n        for fn in (self._small, self._medium, self._large):\n            wp.kernel(fn, module=\"unique\")",
+        "min_run_count": 2,
+        "name": "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_large",
+        "number": 40,
+        "param_names": [],
+        "params": [],
+        "repeat": 15,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "cb1bc9857b0d20672fb48c1b638a07a575c7cc08cb15a905b8f6fcc54494e627",
+        "warmup_time": 0.2
+    },
+    "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_medium": {
+        "code": "class DeclareUniqueModuleKernel:\n    def time_declare_medium(self):\n        wp.kernel(self._medium, module=\"unique\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self._small = small_sparse_mv\n        self._medium = medium_bound_project\n        self._large = large_equality_flex\n        # Warm linecache and first-module registration so samples reflect the\n        # steady-state per-kernel declaration cost rather than one-time setup.\n        for fn in (self._small, self._medium, self._large):\n            wp.kernel(fn, module=\"unique\")",
+        "min_run_count": 2,
+        "name": "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_medium",
+        "number": 40,
+        "param_names": [],
+        "params": [],
+        "repeat": 15,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "95cb6d1d580b092313147bb5dc75aff1658627960c1c3d3b7c84786615d2f5c1",
+        "warmup_time": 0.2
+    },
+    "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_small": {
+        "code": "class DeclareUniqueModuleKernel:\n    def time_declare_small(self):\n        wp.kernel(self._small, module=\"unique\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self._small = small_sparse_mv\n        self._medium = medium_bound_project\n        self._large = large_equality_flex\n        # Warm linecache and first-module registration so samples reflect the\n        # steady-state per-kernel declaration cost rather than one-time setup.\n        for fn in (self._small, self._medium, self._large):\n            wp.kernel(fn, module=\"unique\")",
+        "min_run_count": 2,
+        "name": "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_small",
+        "number": 40,
+        "param_names": [],
+        "params": [],
+        "repeat": 15,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "253eb7f6e4e8cec96333da69aa183db16f8159d2f6a70e6ed923d81cb47ce198",
+        "warmup_time": 0.2
+    },
+    "codegen.mat22_augassign.CompileModule.time_cuda_codegen": {
+        "code": "class CompileModule:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()",
+        "min_run_count": 2,
+        "name": "codegen.mat22_augassign.CompileModule.time_cuda_codegen",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 20,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "38b2760c7a401ce7d976de2728c62f210f68a789ca84f80cd47ea13e7422b5f7",
+        "warmup_time": -1
+    },
+    "codegen.mat22_augassign.RunBackwardKernel.track_cuda": {
+        "code": "class RunBackwardKernel:\n    def track_cuda(self):\n        with wp.ScopedTimer(\"benchmark\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(1000):\n                wp.launch(\n                    matrix_augassign_kernel,\n                    self.a.shape,\n                    inputs=[self.a, self.b],\n                    adj_inputs=[self.a.grad, self.b.grad],\n                    adj_outputs=[],\n                    adjoint=True,\n                    device=\"cuda:0\",\n                )\n    \n        return median(result.elapsed for result in timer.timing_results) * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        N = (1024, 1024)\n        self.a = wp.zeros(N, dtype=wp.mat22, device=\"cuda:0\", requires_grad=True)\n        self.b = wp.ones(N, dtype=wp.mat22, device=\"cuda:0\", requires_grad=True)\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.mat22_augassign.RunBackwardKernel.track_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "ed7736ff0bd2e88acfa8ab9f1e19b933a161e766539ed7983d0583b2e584555a"
+    },
+    "codegen.mat22_augassign.RunForwardKernel.track_cuda": {
+        "code": "class RunForwardKernel:\n    def track_cuda(self):\n        with wp.ScopedTimer(\"benchmark\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(1000):\n                wp.launch(matrix_augassign_kernel, self.a.shape, inputs=[self.a, self.b], device=\"cuda:0\")\n    \n        return median(result.elapsed for result in timer.timing_results) * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        N = (1024, 1024)\n        self.a = wp.zeros(N, dtype=wp.mat22, device=\"cuda:0\")\n        self.b = wp.ones(N, dtype=wp.mat22, device=\"cuda:0\")\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.mat22_augassign.RunForwardKernel.track_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "ff3a27d04c4703e76d0169c2c161441a978e3b06f2be7e46062ffb0c25636b82"
+    },
+    "codegen.mat44_assignment.CompileModule.time_cuda_codegen": {
+        "code": "class CompileModule:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()",
+        "min_run_count": 2,
+        "name": "codegen.mat44_assignment.CompileModule.time_cuda_codegen",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 20,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "38b2760c7a401ce7d976de2728c62f210f68a789ca84f80cd47ea13e7422b5f7",
+        "warmup_time": -1
+    },
+    "codegen.mat44_assignment.RunBackwardKernel.track_cuda": {
+        "code": "class RunBackwardKernel:\n    def track_cuda(self):\n        with wp.ScopedTimer(\"benchmark\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(10000):\n                wp.launch(\n                    component_assignment,\n                    self.a.shape,\n                    inputs=[self.a, self.b],\n                    adj_inputs=[self.a.grad, self.b.grad],\n                    adj_outputs=[],\n                    adjoint=True,\n                    device=\"cuda:0\",\n                )\n    \n        return median(result.elapsed for result in timer.timing_results) * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        N = (1024, 1024)\n        self.a = wp.ones(N, dtype=wp.mat44, device=\"cuda:0\", requires_grad=True)\n        self.b = wp.zeros(N, dtype=wp.mat44, device=\"cuda:0\", requires_grad=True)\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.mat44_assignment.RunBackwardKernel.track_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "e69aa852b7d08ac5f976884562719bbdeabd2adc0fb3146d4f1f3548502c97c9"
+    },
+    "codegen.mat44_assignment.RunForwardKernel.track_cuda": {
+        "code": "class RunForwardKernel:\n    def track_cuda(self):\n        with wp.ScopedTimer(\"benchmark\", print=False, cuda_filter=wp.TIMING_KERNEL, synchronize=True) as timer:\n            for _ in range(1000):\n                self.cmd.launch()\n    \n        return median(result.elapsed for result in timer.timing_results) * 1e-3\n\n    def setup(self):\n        wp.init()\n        wp.load_module(device=\"cuda:0\")\n    \n        N = (1024, 1024)\n        self.a = wp.ones(N, dtype=wp.mat44, device=\"cuda:0\")\n        self.b = wp.zeros(N, dtype=wp.mat44, device=\"cuda:0\")\n        self.cmd = wp.launch(\n            component_assignment, self.a.shape, inputs=[self.a, self.b], device=\"cuda:0\", record_cmd=True\n        )\n    \n        wp.synchronize_device(\"cuda:0\")",
+        "name": "codegen.mat44_assignment.RunForwardKernel.track_cuda",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "seconds",
+        "version": "44772143fcbf7530be5836d7229bebb3f9f6b47549bd2fc50d5658af005afb0e"
+    },
+    "deterministic.AtomicAddDeterminismOverhead.time_cuda": {
+        "code": "class AtomicAddDeterminismOverhead:\n    def time_cuda(self, cache, mode, num_outputs, num_elements):\n        wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, cache, mode, num_outputs, num_elements):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        if mode == \"deterministic\" and not DETERMINISM_SUPPORTED:\n            raise NotImplementedError(\"deterministic kernel options are not supported by this Warp version\")\n    \n        vals_np, indices_np = cache\n        self.vals = wp.array(vals_np[num_elements], dtype=wp.float32, device=self.device)\n        self.indices = wp.array(indices_np[num_elements][num_outputs], dtype=wp.int32, device=self.device)\n        self.out = wp.zeros(shape=(num_outputs,), dtype=wp.float32, device=self.device)\n    \n        self.kernel = scatter_add_kernel_deterministic if mode == \"deterministic\" else scatter_add_kernel\n        wp.launch(\n            zero_float_array_kernel,\n            dim=num_outputs,\n            inputs=[self.out],\n            device=self.device,\n        )\n        wp.launch(\n            self.kernel,\n            (num_elements,),\n            inputs=[self.vals, self.indices],\n            outputs=[self.out],\n            device=self.device,\n        )\n        wp.synchronize_device(self.device)\n    \n        with wp.ScopedCapture(device=self.device, force_module_load=False) as capture:\n            wp.launch(\n                zero_float_array_kernel,\n                dim=num_outputs,\n                inputs=[self.out],\n                device=self.device,\n            )\n            wp.launch(\n                self.kernel,\n                (num_elements,),\n                inputs=[self.vals, self.indices],\n                outputs=[self.out],\n                device=self.device,\n            )\n    \n        self.graph = capture.graph\n    \n        for _ in range(5):\n            wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)\n\n    def setup_cache(self):\n        rng = np.random.default_rng(123)\n        vals_np = {n: rng.random(n, dtype=np.float32) for n in DETERMINISTIC_BENCHMARK_SIZES}\n        indices_np = {}\n        for n in DETERMINISTIC_BENCHMARK_SIZES:\n            indices_np[n] = {\n                1: np.zeros(n, dtype=np.int32),\n                65536: rng.integers(0, 65536, size=n, dtype=np.int32),\n            }\n        return vals_np, indices_np",
+        "min_run_count": 2,
+        "name": "deterministic.AtomicAddDeterminismOverhead.time_cuda",
+        "number": 5,
+        "param_names": [
+            "mode",
+            "num_outputs",
+            "num_elements"
+        ],
+        "params": [
+            [
+                "'normal'",
+                "'deterministic'"
+            ],
+            [
+                "1",
+                "65536"
+            ],
+            [
+                "65536",
+                "262144",
+                "1048576"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "setup_cache_key": "deterministic:103",
+        "type": "time",
+        "unit": "seconds",
+        "version": "12ef8ed9c36f91126b3969fcaba4b9ee103bdfe3b0c792d3c7dd5bac2f2d21d0",
+        "warmup_time": -1
+    },
+    "deterministic.AtomicCounterDeterminismOverhead.time_cuda": {
+        "code": "class AtomicCounterDeterminismOverhead:\n    def time_cuda(self, vals_np, mode, num_elements):\n        wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, vals_np, mode, num_elements):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        if mode == \"deterministic\" and not DETERMINISM_SUPPORTED:\n            raise NotImplementedError(\"deterministic kernel options are not supported by this Warp version\")\n    \n        self.vals = wp.array(vals_np[num_elements], dtype=wp.float32, device=self.device)\n        self.counter = wp.zeros(shape=(1,), dtype=wp.int32, device=self.device)\n        self.out = wp.zeros(shape=(num_elements,), dtype=wp.float32, device=self.device)\n    \n        self.kernel = counter_kernel_deterministic if mode == \"deterministic\" else counter_kernel\n        wp.launch(\n            zero_int_array_kernel,\n            dim=1,\n            inputs=[self.counter],\n            device=self.device,\n        )\n        wp.launch(\n            zero_float_array_kernel,\n            dim=num_elements,\n            inputs=[self.out],\n            device=self.device,\n        )\n        wp.launch(\n            self.kernel,\n            (num_elements,),\n            inputs=[self.vals, self.counter],\n            outputs=[self.out],\n            device=self.device,\n        )\n        wp.synchronize_device(self.device)\n    \n        with wp.ScopedCapture(device=self.device, force_module_load=False) as capture:\n            wp.launch(\n                zero_int_array_kernel,\n                dim=1,\n                inputs=[self.counter],\n                device=self.device,\n            )\n            wp.launch(\n                zero_float_array_kernel,\n                dim=num_elements,\n                inputs=[self.out],\n                device=self.device,\n            )\n            wp.launch(\n                self.kernel,\n                (num_elements,),\n                inputs=[self.vals, self.counter],\n                outputs=[self.out],\n                device=self.device,\n            )\n    \n        self.graph = capture.graph\n    \n        for _ in range(5):\n            wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)\n\n    def setup_cache(self):\n        rng = np.random.default_rng(321)\n        return {n: rng.random(n, dtype=np.float32) for n in DETERMINISTIC_BENCHMARK_SIZES}",
+        "min_run_count": 2,
+        "name": "deterministic.AtomicCounterDeterminismOverhead.time_cuda",
+        "number": 5,
+        "param_names": [
+            "mode",
+            "num_elements"
+        ],
+        "params": [
+            [
+                "'normal'",
+                "'deterministic'"
+            ],
+            [
+                "65536",
+                "262144",
+                "1048576"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "setup_cache_key": "deterministic:182",
+        "type": "time",
+        "unit": "seconds",
+        "version": "a346ece3f982dd5ba9658e55d18bec2918f38cd7a82ab130db1402c100c4192f",
+        "warmup_time": -1
+    },
+    "examples.cloth.Cloth.time_simulate": {
+        "code": "class Cloth:\n    def time_simulate(self, res):\n        wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)\n\n    def setup(self, res):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        key = (res, self.device.alias)\n    \n        state = _STATE_CACHE.get(key)\n        if state is None:\n            state = _STATE_CACHE[key] = _ClothState(res, self.device)\n    \n        state.reset()\n    \n        self.state = state\n        self.graph = state.graph",
+        "min_run_count": 2,
+        "name": "examples.cloth.Cloth.time_simulate",
+        "number": 400,
+        "param_names": [
+            "res"
+        ],
+        "params": [
+            [
+                "32",
+                "128"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "03e2466c496b43cec6be66a43c5fa57b0e3fb22d5450ec4c3df15e34863c2750",
+        "warmup_time": -1
+    },
+    "examples.mesh_intersect.MeshIntersect.time_intersect": {
+        "code": "class MeshIntersect:\n    @skip_benchmark_if(USD_AVAILABLE is False)\n    def time_intersect(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n    \n        self.query_count = 1024\n        self.has_queried = False\n    \n        self.path_0 = os.path.join(get_asset_directory(), \"cube.usd\")\n        self.path_1 = os.path.join(get_asset_directory(), \"sphere.usd\")\n    \n        self.mesh_0 = self.load_mesh(self.path_0, \"/root/cube\")\n        self.mesh_1 = self.load_mesh(self.path_1, \"/root/sphere\")\n    \n        self.query_num_faces = int(len(self.mesh_0.indices) / 3)\n        self.query_num_points = len(self.mesh_0.points)\n    \n        self.array_result = wp.zeros(self.query_count, dtype=int, device=self.device)\n        self.array_xforms = wp.empty(self.query_count, dtype=wp.transform, device=self.device)\n    \n        # generate random relative transforms\n        wp.launch(init_xforms, (self.query_count,), inputs=[42, self.array_xforms], device=self.device)\n    \n        self.cmd = wp.launch(\n            kernel=intersect,\n            dim=self.query_num_faces * self.query_count,\n            inputs=[self.mesh_0.id, self.mesh_1.id, self.query_num_faces, self.array_xforms, self.array_result],\n            device=self.device,\n            record_cmd=True,\n        )\n    \n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "examples.mesh_intersect.MeshIntersect.time_intersect",
+        "number": 250,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "48c5781d30b4cbea9ddb8873fa5f97989651980a877d360ddcc2c7ca93cb280a",
+        "warmup_time": -1
+    },
+    "fem.integrate.FemCorotatedElasticityLinearGrid.time_cuda": {
+        "code": "class FemCorotatedElasticityLinearGrid:\n    def time_cuda(self, fn, assembly):\n        self.run(fn)\n\n    @setup_once\n    def setup(self, fn: str, assembly: str):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        res = 32\n        with wp.ScopedDevice(self.device):\n            geo = fem.Grid3D(res=(res, res, res))\n            space = fem.make_polynomial_space(geo, degree=1, dtype=wp.vec3)\n            self.make_integrate_func(space, fn, assembly)",
+        "min_run_count": 2,
+        "name": "fem.integrate.FemCorotatedElasticityLinearGrid.time_cuda",
+        "number": 15,
+        "param_names": [
+            "fn",
+            "assembly"
+        ],
+        "params": [
+            [
+                "'energy'",
+                "'forces'",
+                "'hessian'",
+                "'hessian_compressed'"
+            ],
+            [
+                "'generic'",
+                "'dispatch'"
+            ]
+        ],
+        "repeat": 5,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "86a2b40db04386e303ddb955aeabf8950ea5b03e25f462ab6ae0d29ab220ef56",
+        "warmup_time": -1
+    },
+    "fem.integrate.FemCorotatedElasticityQuadraticTetmesh.time_cuda": {
+        "code": "class FemCorotatedElasticityQuadraticTetmesh:\n    def time_cuda(self, fn, assembly):\n        self.run(fn)\n\n    @setup_once\n    def setup(self, fn: str, assembly: str):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        res = 16\n        with wp.ScopedDevice(self.device):\n            pos, cells = gen_tetmesh(res=(res, res, res))\n            geo = fem.Tetmesh(cells, pos)\n            space = fem.make_polynomial_space(geo, degree=2, dtype=wp.vec3)\n            self.make_integrate_func(space, fn, assembly)",
+        "min_run_count": 2,
+        "name": "fem.integrate.FemCorotatedElasticityQuadraticTetmesh.time_cuda",
+        "number": 15,
+        "param_names": [
+            "fn",
+            "assembly"
+        ],
+        "params": [
+            [
+                "'energy'",
+                "'forces'",
+                "'hessian'",
+                "'hessian_compressed'"
+            ],
+            [
+                "'dispatch'"
+            ]
+        ],
+        "repeat": 5,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "47802cb3503c9957d5bc01b5adec5754da6f58f586510b7f4c586abc3f787e32",
+        "warmup_time": -1
+    },
+    "fem.integrate.FemCorotatedElasticitySparseAssemblyLinearGrid.time_cuda": {
+        "code": "class FemCorotatedElasticitySparseAssemblyLinearGrid:\n    def time_cuda(self, fn, assembly):\n        self.run()\n\n    def setup(self, fn: str, assembly: str):\n        self._initialize(fn, assembly)\n        self._prepare_sparse_source()",
+        "min_run_count": 2,
+        "name": "fem.integrate.FemCorotatedElasticitySparseAssemblyLinearGrid.time_cuda",
+        "number": 10,
+        "param_names": [
+            "fn",
+            "assembly"
+        ],
+        "params": [
+            [
+                "'hessian'",
+                "'hessian_compressed'"
+            ],
+            [
+                "'generic'",
+                "'dispatch'"
+            ]
+        ],
+        "repeat": 5,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "4e95df63f83d4cd2018778546880b2a63992a11d729ae96fc488ca46de2d6a17",
+        "warmup_time": 0
+    },
+    "fem.integrate.FemCorotatedElasticitySparseAssemblyQuadraticTetmesh.time_cuda": {
+        "code": "class FemCorotatedElasticitySparseAssemblyQuadraticTetmesh:\n    def time_cuda(self, fn, assembly):\n        self.run()\n\n    def setup(self, fn: str, assembly: str):\n        self._initialize(fn, assembly)\n        self._prepare_sparse_source()",
+        "min_run_count": 2,
+        "name": "fem.integrate.FemCorotatedElasticitySparseAssemblyQuadraticTetmesh.time_cuda",
+        "number": 10,
+        "param_names": [
+            "fn",
+            "assembly"
+        ],
+        "params": [
+            [
+                "'hessian'",
+                "'hessian_compressed'"
+            ],
+            [
+                "'dispatch'"
+            ]
+        ],
+        "repeat": 5,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "4019af17cc1d348c58fd61637cc95aa0f3cae9debe6fd72ab5702e6a8c1e92de",
+        "warmup_time": 0
+    },
+    "fem.integrate.FemCorotatedElasticitySparseAssemblyVeryHighOrder.time_cuda": {
+        "code": "class FemCorotatedElasticitySparseAssemblyVeryHighOrder:\n    def time_cuda(self, fn, assembly):\n        self.run()\n\n    def setup(self, fn: str, assembly: str):\n        self._initialize(fn, assembly)\n        self._prepare_sparse_source()",
+        "min_run_count": 2,
+        "name": "fem.integrate.FemCorotatedElasticitySparseAssemblyVeryHighOrder.time_cuda",
+        "number": 10,
+        "param_names": [
+            "fn",
+            "assembly"
+        ],
+        "params": [
+            [
+                "'hessian'",
+                "'hessian_compressed'"
+            ],
+            [
+                "'dispatch'"
+            ]
+        ],
+        "repeat": 5,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "6507abdf2c567be13e038cb828a8aba59bc98267ad5d9b728075282b1aa00205",
+        "warmup_time": 0
+    },
+    "fem.integrate.FemCorotatedElasticityVeryHighOrder.time_cuda": {
+        "code": "class FemCorotatedElasticityVeryHighOrder:\n    def time_cuda(self, fn, assembly):\n        self.run(fn)\n\n    @setup_once\n    def setup(self, fn: str, assembly: str):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        res = 2\n        with wp.ScopedDevice(self.device):\n            geo = fem.Grid3D(res=(res, res, res))\n            space = fem.make_polynomial_space(geo, degree=4, dtype=wp.vec3)\n            self.make_integrate_func(space, fn, assembly)",
+        "min_run_count": 2,
+        "name": "fem.integrate.FemCorotatedElasticityVeryHighOrder.time_cuda",
+        "number": 50,
+        "param_names": [
+            "fn",
+            "assembly"
+        ],
+        "params": [
+            [
+                "'energy'",
+                "'forces'",
+                "'hessian'",
+                "'hessian_compressed'"
+            ],
+            [
+                "'dispatch'"
+            ]
+        ],
+        "repeat": 15,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "c83f1d9ccd1b3d91f0330513670d3c2858e40baca95214e6ccb60b3180d06901",
+        "warmup_time": -1
+    },
+    "floordiv.SignedFloorDivCPU.time_division": {
+        "code": "class SignedFloorDivCPU:\n    def time_division(self, divisor_kind):\n        self.command.launch()\n\n    @setup_once\n    def setup(self, divisor_kind):\n        wp.init()\n        self.device = wp.get_device(\"cpu\")\n    \n        indices = np.arange(CPU_NUM_ELEMENTS, dtype=np.int64)\n        values_np = ((indices * 104729 + 12345) % 200000000 + 1).astype(np.int32)\n        divisors_np = (indices % 97 + 2).astype(np.int32)\n        values_np[1::2] *= -1\n        divisors_np[2::4] *= -1\n        divisors_np[3::4] *= -1\n    \n        self.values = wp.array(values_np, dtype=wp.int32, device=self.device)\n        self.output = wp.empty(CPU_NUM_ELEMENTS, dtype=wp.int32, device=self.device)\n    \n        if divisor_kind == \"runtime\":\n            self.divisors = wp.array(divisors_np, dtype=wp.int32, device=self.device)\n            self.command = wp.launch(\n                floordiv_runtime_kernel,\n                dim=CPU_NUM_ELEMENTS,\n                inputs=[self.values, self.divisors],\n                outputs=[self.output],\n                device=self.device,\n                record_cmd=True,\n            )\n        else:\n            self.command = wp.launch(\n                floordiv_constant_kernel,\n                dim=CPU_NUM_ELEMENTS,\n                inputs=[self.values],\n                outputs=[self.output],\n                device=self.device,\n                record_cmd=True,\n            )\n    \n        for _ in range(5):\n            self.command.launch()",
+        "min_run_count": 2,
+        "name": "floordiv.SignedFloorDivCPU.time_division",
+        "number": 1,
+        "param_names": [
+            "divisor_kind"
+        ],
+        "params": [
+            [
+                "'runtime'",
+                "'constant'"
+            ]
+        ],
+        "repeat": 15,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "ccdd835a816235e3e8a94d39a03bff8348c160d65cc528a03d180a5009c16e8a",
+        "warmup_time": -1
+    },
+    "floordiv.SignedFloorDivCUDA.time_division": {
+        "code": "class SignedFloorDivCUDA:\n    def time_division(self, divisor_kind):\n        self.command.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, divisor_kind):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        indices = np.arange(CUDA_NUM_ELEMENTS, dtype=np.int64)\n        values_np = ((indices * 104729 + 12345) % 200000000 + 1).astype(np.int32)\n        divisors_np = (indices % 97 + 2).astype(np.int32)\n        values_np[1::2] *= -1\n        divisors_np[2::4] *= -1\n        divisors_np[3::4] *= -1\n    \n        self.values = wp.array(values_np, dtype=wp.int32, device=self.device)\n        self.output = wp.empty(CUDA_NUM_ELEMENTS, dtype=wp.int32, device=self.device)\n    \n        if divisor_kind == \"runtime\":\n            self.divisors = wp.array(divisors_np, dtype=wp.int32, device=self.device)\n            self.command = wp.launch(\n                floordiv_runtime_kernel,\n                dim=CUDA_NUM_ELEMENTS,\n                inputs=[self.values, self.divisors],\n                outputs=[self.output],\n                device=self.device,\n                record_cmd=True,\n            )\n        else:\n            self.command = wp.launch(\n                floordiv_constant_kernel,\n                dim=CUDA_NUM_ELEMENTS,\n                inputs=[self.values],\n                outputs=[self.output],\n                device=self.device,\n                record_cmd=True,\n            )\n    \n        for _ in range(5):\n            self.command.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "floordiv.SignedFloorDivCUDA.time_division",
+        "number": 16,
+        "param_names": [
+            "divisor_kind"
+        ],
+        "params": [
+            [
+                "'runtime'",
+                "'constant'"
+            ]
+        ],
+        "repeat": 31,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "7b69eec2095a4869d1bdacee14a5884fbe71742d0ca63151e1de8f063ec9971d",
+        "warmup_time": -1
+    },
+    "memory_access.ArrayOfStructures.time_kernels": {
+        "code": "class ArrayOfStructures:\n    def time_kernels(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n        self.test_array = wp.ones((N, N, N, NUM_COMPONENTS), dtype=float, device=self.device)\n        self.cmd = wp.launch(kernel_aos, (N, N, N), inputs=[self.test_array], record_cmd=True, device=self.device)\n        # Warmup\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "memory_access.ArrayOfStructures.time_kernels",
+        "number": 100,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "0a5ba512704ea0fe2cf15ca00254596256468c7b87b908812744682634561b28",
+        "warmup_time": -1
+    },
+    "memory_access.LoadStoreIJ.time_cuda": {
+        "code": "class LoadStoreIJ:\n    def time_cuda(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n        self.input_array = wp.ones((8192, 4096), dtype=float, device=self.device)\n        self.output_array = wp.empty_like(self.input_array)\n    \n        self.cmd = wp.launch(\n            load_store_ij,\n            (8192, 4096),\n            inputs=[self.input_array],\n            outputs=[self.output_array],\n            device=self.device,\n            record_cmd=True,\n        )\n        # Warmup\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "memory_access.LoadStoreIJ.time_cuda",
+        "number": 100,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "a4e6e27a97675295bf7655a4c44d4c5d2aa420e14a2606cf7665928912d6c827",
+        "warmup_time": -1
+    },
+    "memory_access.LoadStoreJI.time_cuda": {
+        "code": "class LoadStoreJI:\n    def time_cuda(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n        self.input_array = wp.ones((8192, 4096), dtype=float, device=self.device)\n        self.output_array = wp.empty_like(self.input_array)\n    \n        self.cmd = wp.launch(\n            load_store_ji,\n            (4096, 8192),\n            inputs=[self.input_array],\n            outputs=[self.output_array],\n            device=self.device,\n            record_cmd=True,\n        )\n        # Warmup\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "memory_access.LoadStoreJI.time_cuda",
+        "number": 100,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "148c0d9b8f8a42725949c21296a0f28ada701323c11c5c4f999cd586cb665e33",
+        "warmup_time": -1
+    },
+    "memory_access.StructureOfArrays.time_kernels": {
+        "code": "class StructureOfArrays:\n    def time_kernels(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n        self.test_array = wp.ones((NUM_COMPONENTS, N, N, N), dtype=float, device=self.device)\n        self.cmd = wp.launch(kernel_soa, (N, N, N), inputs=[self.test_array], record_cmd=True, device=self.device)\n        # Warmup\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "memory_access.StructureOfArrays.time_kernels",
+        "number": 100,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "d29c3bffd0ff99f70395bdc425d8ad1396eaaa4e262b7498b6de5cf5f5fe2ea7",
+        "warmup_time": -1
+    },
+    "native_library_footprint.NativeLibraryFootprint.track_warp_clang_library_size": {
+        "code": "class NativeLibraryFootprint:\n    @skip_benchmark_if(not sys.platform.startswith(\"linux\"))\n    def track_warp_clang_library_size(self):\n        return self.warp_clang_library_path.stat().st_size\n\n    def setup(self):\n        bin_directory = Path(wp.__file__).resolve().parent / \"bin\"\n        self.warp_library_path = bin_directory / \"warp.so\"\n        self.warp_clang_library_path = bin_directory / \"warp-clang.so\"",
+        "name": "native_library_footprint.NativeLibraryFootprint.track_warp_clang_library_size",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "bytes",
+        "version": "4e73d0f8e1fd88c5aabe18c1ddcbb6f4766f8c7465096e497e70cb1e9610d6b2"
+    },
+    "native_library_footprint.NativeLibraryFootprint.track_warp_library_size": {
+        "code": "class NativeLibraryFootprint:\n    @skip_benchmark_if(not sys.platform.startswith(\"linux\"))\n    def track_warp_library_size(self):\n        return self.warp_library_path.stat().st_size\n\n    def setup(self):\n        bin_directory = Path(wp.__file__).resolve().parent / \"bin\"\n        self.warp_library_path = bin_directory / \"warp.so\"\n        self.warp_clang_library_path = bin_directory / \"warp-clang.so\"",
+        "name": "native_library_footprint.NativeLibraryFootprint.track_warp_library_size",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "bytes",
+        "version": "6d1da67be2f9789e2440b59475f3d0f313dcfb70d7a23d4516f8712246c09787"
+    },
+    "native_library_footprint.NativeLibraryFootprint.track_warp_tls_allocation_size": {
+        "code": "class NativeLibraryFootprint:\n    @skip_benchmark_if(not sys.platform.startswith(\"linux\"))\n    def track_warp_tls_allocation_size(self):\n        return _get_elf_tls_allocation_size(self.warp_library_path)\n\n    def setup(self):\n        bin_directory = Path(wp.__file__).resolve().parent / \"bin\"\n        self.warp_library_path = bin_directory / \"warp.so\"\n        self.warp_clang_library_path = bin_directory / \"warp-clang.so\"",
+        "name": "native_library_footprint.NativeLibraryFootprint.track_warp_tls_allocation_size",
+        "param_names": [],
+        "params": [],
+        "type": "track",
+        "unit": "bytes",
+        "version": "a8448562e7b2c8b003320baada82ec6f7285db7fbf571608ee67e2e1336fa0d7"
+    },
+    "sparse.matrix_matrix.BsrMMDeepDense.time_cuda": {
+        "code": "class BsrMMDeepDense:\n    def time_cuda(self):\n        self.run()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        res = 1\n        n_qp = 6000\n    \n        with wp.ScopedDevice(self.device):\n            geo = fem.Grid3D(res=(res, res, res))\n            space = fem.make_polynomial_space(geo, degree=3, dtype=wp.vec3)\n    \n            rng = np.random.default_rng(42)\n            qps = wp.array(rng.random((1, n_qp, 3), dtype=np.float32), dtype=wp.vec3)\n            weights = wp.full((1, n_qp), value=1.0 / n_qp, dtype=wp.float32)\n    \n            quadrature = fem.ExplicitQuadrature(fem.Cells(geo), points=qps, weights=weights)\n    \n            self.build_system(space, quadrature=quadrature, block_shape=(9, 12))",
+        "min_run_count": 2,
+        "name": "sparse.matrix_matrix.BsrMMDeepDense.time_cuda",
+        "number": 5,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "b0f513afe229035883783f06d76e9935a7ec64d6c9b565a7761e457c545310dc",
+        "warmup_time": -1
+    },
+    "sparse.matrix_matrix.BsrMMLinearGridMatrix.time_cuda": {
+        "code": "class BsrMMLinearGridMatrix:\n    def time_cuda(self):\n        self.run()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        res = 64\n        with wp.ScopedDevice(self.device):\n            geo = fem.Grid3D(res=(res, res, res))\n            space = fem.make_polynomial_space(geo)\n            self.build_system(space)",
+        "min_run_count": 2,
+        "name": "sparse.matrix_matrix.BsrMMLinearGridMatrix.time_cuda",
+        "number": 5,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "61f103db61963bd3a2b550879fe743dfe025cca8e8f6262c7554f45f0184b7cb",
+        "warmup_time": -1
+    },
+    "sparse.matrix_matrix.BsrMMQuadraticTetmeshMatrix.time_cuda": {
+        "code": "class BsrMMQuadraticTetmeshMatrix:\n    def time_cuda(self):\n        self.run()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        res = 32\n        with wp.ScopedDevice(self.device):\n            pos, cells = gen_tetmesh(res=(res, res, res))\n            geo = fem.Tetmesh(cells, pos)\n            space = fem.make_polynomial_space(geo, degree=2, dtype=wp.vec3)\n            self.build_system(space)",
+        "min_run_count": 2,
+        "name": "sparse.matrix_matrix.BsrMMQuadraticTetmeshMatrix.time_cuda",
+        "number": 5,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "97cd9cf3e6cf06ae625bdb7b75749fba9055b0d6642e0d37c8f52c584f3f61a0",
+        "warmup_time": -1
+    },
+    "sparse.matrix_vector.BsrMvAlmostDense.time_cuda": {
+        "code": "class BsrMvAlmostDense:\n    def time_cuda(self):\n        self.run()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        res = 2\n        with wp.ScopedDevice(self.device):\n            geo = fem.Grid3D(res=(res, res, res))\n            space = fem.make_polynomial_space(geo, degree=4, dtype=wp.vec3)\n            self.build_system(space, diffusion_form_vector)",
+        "min_run_count": 2,
+        "name": "sparse.matrix_vector.BsrMvAlmostDense.time_cuda",
+        "number": 10,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "ed1097199da1faff57895e4d290c54e565ece299ee5e6a3a1374b241d5ce1b8b",
+        "warmup_time": -1
+    },
+    "sparse.matrix_vector.BsrMvLinearGridMatrix.time_cuda": {
+        "code": "class BsrMvLinearGridMatrix:\n    def time_cuda(self):\n        self.run()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        res = 64\n        with wp.ScopedDevice(self.device):\n            geo = fem.Grid3D(res=(res, res, res))\n            space = fem.make_polynomial_space(geo)\n            self.build_system(space, diffusion_form_scalar)",
+        "min_run_count": 2,
+        "name": "sparse.matrix_vector.BsrMvLinearGridMatrix.time_cuda",
+        "number": 10,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "0a51de1a4194b95caabca1f6bcd98f185e8902ce14de1ec2bb155d1fc349f1df",
+        "warmup_time": -1
+    },
+    "sparse.matrix_vector.BsrMvQuadraticTetmeshMatrix.time_cuda": {
+        "code": "class BsrMvQuadraticTetmeshMatrix:\n    def time_cuda(self):\n        self.run()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        res = 32\n        with wp.ScopedDevice(self.device):\n            pos, cells = gen_tetmesh(res=(res, res, res))\n            geo = fem.Tetmesh(cells, pos)\n            space = fem.make_polynomial_space(geo, degree=2, dtype=wp.vec3)\n            self.build_system(space, diffusion_form_vector)",
+        "min_run_count": 2,
+        "name": "sparse.matrix_vector.BsrMvQuadraticTetmeshMatrix.time_cuda",
+        "number": 10,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "17bb3ed93ffd72a27ba723b5ee08de225969bb2851c229f3cd3531a85af05183",
+        "warmup_time": -1
+    },
+    "sparse.row_capacity.BsrAxpyPaddedMergeWideRows.time_cuda": {
+        "code": "class BsrAxpyPaddedMergeWideRows:\n    def time_cuda(self):\n        self._run_impl()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        wp.init()\n        _require_row_capacity_support()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        with wp.ScopedDevice(self.device):\n            self._x = _make_row_capacity_matrix(\n                32768, 32768, active_per_row=16, capacity_per_row=16, device=self.device, col_shift=8\n            )\n            self._y = _make_row_capacity_matrix(\n                32768, 32768, active_per_row=16, capacity_per_row=64, device=self.device\n            )\n            self._work = wps.bsr_axpy_work_arrays()\n            self._run_impl()\n    \n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "sparse.row_capacity.BsrAxpyPaddedMergeWideRows.time_cuda",
+        "number": 5,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "d910aa679903d9484ab2ac91cf7b754219ec6736a8bb266501ae0cc941bfc82b",
+        "warmup_time": -1
+    },
+    "sparse.row_capacity.BsrAxpyPaddedRows.time_cuda": {
+        "code": "class BsrAxpyPaddedRows:\n    def time_cuda(self):\n        self._run_impl()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        wp.init()\n        _require_row_capacity_support()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        with wp.ScopedDevice(self.device):\n            self._x = _make_row_capacity_matrix(32768, 32768, active_per_row=4, capacity_per_row=4, device=self.device)\n            self._y = _make_row_capacity_matrix(32768, 32768, active_per_row=0, capacity_per_row=8, device=self.device)\n            self._run_impl()\n    \n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "sparse.row_capacity.BsrAxpyPaddedRows.time_cuda",
+        "number": 5,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "bb193e3e577dd012efa10eb1f2ec29e36a6e2cac541dae6dbb183ccb734e3a95",
+        "warmup_time": -1
+    },
+    "sparse.row_capacity.BsrCompressGappedRows.time_cuda": {
+        "code": "class BsrCompressGappedRows:\n    def time_cuda(self):\n        self._run_impl()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        wp.init()\n        _require_row_capacity_support()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        with wp.ScopedDevice(self.device):\n            self._src_template = _make_duplicate_candidate_matrix(32768, 32768, capacity_per_row=8, device=self.device)\n            self._src_index = 0\n            self._src_pool = [wps.bsr_copy(self._src_template, topology=\"padded\") for _ in range(self.pool_size)]\n            self._run_impl()\n    \n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "sparse.row_capacity.BsrCompressGappedRows.time_cuda",
+        "number": 5,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "810e3cb3a03f6805f8adc44dd73aa715a63d86da4ad9b10d239ae3fafe4b1cf5",
+        "warmup_time": -1
+    },
+    "sparse.row_capacity.BsrMMPaddedWideRows.time_cuda": {
+        "code": "class BsrMMPaddedWideRows:\n    def time_cuda(self):\n        self._run_impl()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        wp.init()\n        _require_row_capacity_support()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        with wp.ScopedDevice(self.device):\n            self._x = _make_row_capacity_matrix(32768, 32768, active_per_row=8, capacity_per_row=8, device=self.device)\n            self._y = _make_row_capacity_matrix(32768, 32768, active_per_row=8, capacity_per_row=8, device=self.device)\n            self._z = _make_row_capacity_matrix(32768, 32768, active_per_row=0, capacity_per_row=32, device=self.device)\n            self._work = wps.bsr_mm_work_arrays()\n            self._run_impl()\n    \n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "sparse.row_capacity.BsrMMPaddedWideRows.time_cuda",
+        "number": 3,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "3331e52b4cac61abdc62b16b29a301f1d3d479aedb0f6bdefcfddc2e08a0baa5",
+        "warmup_time": -1
+    },
+    "sparse.row_capacity.BsrMvGappedRows.time_cuda": {
+        "code": "class BsrMvGappedRows:\n    def time_cuda(self):\n        self._run_impl()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        wp.init()\n        _require_row_capacity_support()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        with wp.ScopedDevice(self.device):\n            self._mat = _make_row_capacity_matrix(\n                32768, 32768, active_per_row=4, capacity_per_row=8, device=self.device\n            )\n            self._x = wp.ones(shape=self._mat.shape[1], dtype=wp.float32)\n            self._y = wp.zeros(shape=self._mat.shape[0], dtype=wp.float32)\n            self._mat.nnz_sync()\n            self._run_impl()\n    \n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "sparse.row_capacity.BsrMvGappedRows.time_cuda",
+        "number": 20,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "fe6d0ef0d805e299cf254975308ff052949744a1405cb334a436989aeb0ad885",
+        "warmup_time": -1
+    },
+    "sparse.row_capacity.BsrSetFromTripletsPaddedRows.time_cuda": {
+        "code": "class BsrSetFromTripletsPaddedRows:\n    def time_cuda(self):\n        self._run_impl()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        wp.init()\n        _require_row_capacity_support()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        nrow = 32768\n        ncol = 32768\n        capacity_per_row = 8\n        rows, columns, values = _make_duplicate_triplets(nrow, ncol, capacity_per_row)\n    \n        with wp.ScopedDevice(self.device):\n            self._rows = wp.array(rows, dtype=int, device=self.device)\n            self._columns = wp.array(columns, dtype=int, device=self.device)\n            self._values = wp.array(values, dtype=float, device=self.device)\n            self._dest = _make_row_capacity_matrix(nrow, ncol, active_per_row=0, capacity_per_row=8, device=self.device)\n            self._run_impl()\n    \n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "sparse.row_capacity.BsrSetFromTripletsPaddedRows.time_cuda",
+        "number": 5,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "84165de536b376e4b0504bc8bd178eeb6a3a3871484400c0e2e5bd3f1d0986cc",
+        "warmup_time": -1
+    },
+    "sparse.row_capacity.BsrSetFromTripletsPaddedWideRows.time_cuda": {
+        "code": "class BsrSetFromTripletsPaddedWideRows:\n    def time_cuda(self):\n        self._run_impl()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        wp.init()\n        _require_row_capacity_support()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        nrow = 32768\n        ncol = 32768\n        capacity_per_row = 32\n        rows, columns, values = _make_duplicate_triplets(nrow, ncol, capacity_per_row)\n    \n        with wp.ScopedDevice(self.device):\n            self._rows = wp.array(rows, dtype=int, device=self.device)\n            self._columns = wp.array(columns, dtype=int, device=self.device)\n            self._values = wp.array(values, dtype=float, device=self.device)\n            self._dest = _make_row_capacity_matrix(\n                nrow, ncol, active_per_row=0, capacity_per_row=capacity_per_row, device=self.device\n            )\n            self._run_impl()\n    \n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "sparse.row_capacity.BsrSetFromTripletsPaddedWideRows.time_cuda",
+        "number": 3,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "b416924b3192f7c06769c625c528e093323dca00482a8c66522243a7e172f01a",
+        "warmup_time": -1
+    },
+    "sparse.row_capacity.BsrSetTransposePaddedWideRows.time_cuda": {
+        "code": "class BsrSetTransposePaddedWideRows:\n    def time_cuda(self):\n        self._run_impl()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        wp.init()\n        _require_row_capacity_support()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        with wp.ScopedDevice(self.device):\n            self._src = _make_row_capacity_matrix(\n                4096, 4096, active_per_row=16, capacity_per_row=16, device=self.device\n            )\n            self._dest = _make_row_capacity_matrix(\n                4096, 4096, active_per_row=0, capacity_per_row=32, device=self.device\n            )\n            self._run_impl()\n    \n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "sparse.row_capacity.BsrSetTransposePaddedWideRows.time_cuda",
+        "number": 3,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 1,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "f3329af62c50abf5c534ce75414769b311ef34e480fa1cf88342257490de5938",
+        "warmup_time": -1
+    },
+    "sparse.transpose.BsrSetTransposeCompact.time_100_transposes": {
+        "code": "class BsrSetTransposeCompact:\n    def time_100_transposes(self, pattern):\n        wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)\n\n    def setup(self, pattern):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        # Hold active blocks near 512K while varying the stencil width.\n        nrow = ncol = 65536\n        active_rows = nrow\n        degree = 8\n        if pattern == \"stencil32\":\n            nrow = ncol = active_rows = 16384\n            degree = 32\n        elif pattern == \"dense\":\n            nrow = ncol = active_rows = degree = 1024\n        elif pattern == \"overallocated\":\n            # Teapot-sized reserved S2/Q1 spaces: 20 and 8 nodes per 64K cells.\n            # 3000 rows * 8 blocks approximates its measured ~22K active blocks.\n            nrow, ncol, active_rows = 20 * 65536, 8 * 65536, 3000\n        elif pattern == \"wide_hot_column\":\n            degree = 1\n    \n        rows = np.repeat(np.arange(active_rows, dtype=np.int32), degree)\n        columns = (rows + np.tile(np.arange(degree, dtype=np.int32), active_rows)) % ncol\n        if pattern == \"wide_hot_column\":\n            columns.fill(0)\n        elif pattern == \"shared_columns8\":\n            columns = np.tile(np.arange(degree, dtype=np.int32), active_rows)\n        columns = np.sort(columns.reshape(active_rows, degree), axis=1).reshape(-1)\n        nnz = rows.size\n        capacity = nrow * degree if pattern == \"overallocated\" else nnz\n        offsets = np.concatenate(([0], np.cumsum(np.bincount(rows, minlength=nrow)))).astype(np.int32)\n    \n        with wp.ScopedDevice(self.device):\n            self.src = wps.bsr_zeros(nrow, ncol, float)\n            self.src.notify_nnz_changed(nnz=capacity)\n            self.src.columns.fill_(-1)\n            self.src.values.fill_(1.0)\n            wp.copy(self.src.offsets, wp.array(offsets, dtype=int))\n            wp.copy(self.src.columns, wp.array(columns, dtype=int), count=nnz)\n            self.dest = wps.bsr_zeros(ncol, nrow, float)\n            wps.bsr_set_transpose(self.dest, self.src)\n            with wp.ScopedCapture(force_module_load=False) as capture:\n                for _ in range(self.transposes_per_batch):\n                    wps.bsr_set_transpose(self.dest, self.src)\n            self.graph = capture.graph\n            # ASV runs setup before each timed call, so warm each captured graph.\n            wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "sparse.transpose.BsrSetTransposeCompact.time_100_transposes",
+        "number": 1,
+        "param_names": [
+            "pattern"
+        ],
+        "params": [
+            [
+                "'stencil8'",
+                "'stencil32'",
+                "'dense'",
+                "'overallocated'",
+                "'wide_hot_column'",
+                "'shared_columns8'"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "287695e8c6d03dac85654352db1b6acd01aa780df069a9b2a184adb5811d3c1d",
+        "warmup_time": -1
+    },
+    "spatial_query.BvhAABBQuery.time_bvh_aabb_vs_aabb_query": {
+        "code": "class BvhAABBQuery:\n    @skip_benchmark_if(USD_AVAILABLE is False)\n    def time_bvh_aabb_vs_aabb_query(self, query_radius, leaf_size, device, bvh_constructor):\n        wp.capture_launch(self.cuda_graph_bvh_aabb_vs_aabb)\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, query_radius, leaf_size, device, bvh_constructor):\n        with wp.ScopedDevice(device):\n            from pxr import Usd, UsdGeom\n    \n            global seed\n    \n            rand_eng = default_rng(seed)  # or default_rng() for non-deterministic\n            seed = seed + 1\n    \n            wp.init()\n            self.device = wp.get_device(device)\n            wp.load_module(device=self.device)\n    \n            asset_stage = Usd.Stage.Open(os.path.join(get_asset_directory(), \"bunny.usd\"))\n            mesh_geom = UsdGeom.Mesh(asset_stage.GetPrimAtPath(\"/root/bunny\"))\n    \n            points_base = np.array(mesh_geom.GetPointsAttr().Get())\n            indices_base = np.array(mesh_geom.GetFaceVertexIndicesAttr().Get())\n    \n            if NUM_MESHES != 1:\n                points, indices = replicate_mesh_with_random_perturbation(\n                    points_base, indices_base.reshape((-1, 3)), NUM_MESHES, rand_eng\n                )\n                indices = indices.reshape(-1)\n            else:\n                points = points_base\n                indices = indices_base\n    \n            bounding_box = np.array([points.min(axis=0), points.max(axis=0)])\n    \n            self.points = wp.array(points, dtype=wp.vec3)\n            self.indices = wp.array(indices, dtype=int)\n    \n            bb_min = bounding_box[0]\n            bb_max = bounding_box[1]\n    \n            # Option A (no extra cast, if your NumPy supports dtype in Generator.random)\n            query_points_np = bb_min + (bb_max - bb_min) * rand_eng.random((NUM_QUERY_POINTS, 3), dtype=np.float32)\n    \n            # Option B (always works; uses uniform + cast)\n    \n            self.query_points = wp.array(query_points_np, dtype=wp.vec3)\n    \n            num_faces = int(indices.shape[0] / 3)\n            # create wp Bvh\n            self.lowers = wp.zeros(num_faces, dtype=wp.vec3)\n            self.uppers = wp.zeros(num_faces, dtype=wp.vec3)\n    \n            wp.launch(\n                dim=num_faces,\n                kernel=compute_tri_aabbs,\n                inputs=[self.points, self.indices],\n                outputs=[self.lowers, self.uppers],\n            )\n    \n            if leaf_size == 0:\n                self.bvh = wp.Bvh(self.lowers, self.uppers, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(self.points, wp.array(indices, dtype=int), bvh_constructor=bvh_constructor)\n            else:\n                self.bvh = wp.Bvh(self.lowers, self.uppers, leaf_size=leaf_size, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(\n                    self.points, wp.array(indices, dtype=int), bvh_leaf_size=leaf_size, bvh_constructor=bvh_constructor\n                )\n    \n            buffer_size_per_vertex = 32\n            self.vertex_colliding_triangles_offsets = wp.array(\n                np.arange(0, buffer_size_per_vertex * (NUM_QUERY_POINTS + 1), buffer_size_per_vertex, dtype=int),\n                dtype=wp.int32,\n            )\n            self.vertex_colliding_triangles = wp.zeros(2 * buffer_size_per_vertex * NUM_QUERY_POINTS, dtype=wp.int32)\n            self.vertex_colliding_triangles_count = wp.zeros(NUM_QUERY_POINTS, dtype=wp.int32)\n    \n            self.bvh_vertex_triangle_collision_detection_kernel = get_v_t_collision_kernel(True)\n            self.mesh_vertex_triangle_collision_detection_kernel = get_v_t_collision_kernel(False)\n    \n            wp.load_module(device=device)\n            with wp.ScopedCapture(force_module_load=False) as capture:\n                for _ in range(NUM_TRIES):\n                    wp.launch(\n                        dim=NUM_QUERY_POINTS,\n                        kernel=self.bvh_vertex_triangle_collision_detection_kernel,\n                        inputs=[\n                            query_radius,\n                            self.bvh.id,\n                            self.query_points,\n                            self.vertex_colliding_triangles_offsets,\n                        ],\n                        outputs=[self.vertex_colliding_triangles, self.vertex_colliding_triangles_count],\n                    )\n    \n            self.cuda_graph_bvh_aabb_vs_aabb = capture.graph\n    \n            with wp.ScopedCapture(force_module_load=False) as capture:\n                for _ in range(NUM_TRIES):\n                    wp.launch(\n                        dim=NUM_QUERY_POINTS,\n                        kernel=self.mesh_vertex_triangle_collision_detection_kernel,\n                        inputs=[\n                            query_radius,\n                            self.mesh.id,\n                            self.query_points,\n                            self.vertex_colliding_triangles_offsets,\n                        ],\n                        outputs=[self.vertex_colliding_triangles, self.vertex_colliding_triangles_count],\n                    )\n    \n            self.cuda_graph_mesh_aabb_vs_aabb = capture.graph\n    \n            # warm up run\n            wp.capture_launch(self.cuda_graph_bvh_aabb_vs_aabb)\n            wp.capture_launch(self.cuda_graph_mesh_aabb_vs_aabb)\n            wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "spatial_query.BvhAABBQuery.time_bvh_aabb_vs_aabb_query",
+        "number": 5,
+        "param_names": [
+            "query_radius",
+            "leaf_size",
+            "device",
+            "constructor"
+        ],
+        "params": [
+            [
+                "0.002",
+                "0.008"
+            ],
+            [
+                "0",
+                "8"
+            ],
+            [
+                "'cuda'"
+            ],
+            [
+                "'lbvh'",
+                "'cubql'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 120,
+        "type": "time",
+        "unit": "seconds",
+        "version": "6f58b9eda9702e3fe0264ea3b3bb6903506a14bafb5e403ac730564f9a0edd9b",
+        "warmup_time": -1
+    },
+    "spatial_query.BvhAABBQuery.time_mesh_aabb_vs_aabb_query": {
+        "code": "class BvhAABBQuery:\n    @skip_benchmark_if(USD_AVAILABLE is False)\n    def time_mesh_aabb_vs_aabb_query(self, query_radius, leaf_size, device, bvh_constructor):\n        wp.capture_launch(self.cuda_graph_mesh_aabb_vs_aabb)\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, query_radius, leaf_size, device, bvh_constructor):\n        with wp.ScopedDevice(device):\n            from pxr import Usd, UsdGeom\n    \n            global seed\n    \n            rand_eng = default_rng(seed)  # or default_rng() for non-deterministic\n            seed = seed + 1\n    \n            wp.init()\n            self.device = wp.get_device(device)\n            wp.load_module(device=self.device)\n    \n            asset_stage = Usd.Stage.Open(os.path.join(get_asset_directory(), \"bunny.usd\"))\n            mesh_geom = UsdGeom.Mesh(asset_stage.GetPrimAtPath(\"/root/bunny\"))\n    \n            points_base = np.array(mesh_geom.GetPointsAttr().Get())\n            indices_base = np.array(mesh_geom.GetFaceVertexIndicesAttr().Get())\n    \n            if NUM_MESHES != 1:\n                points, indices = replicate_mesh_with_random_perturbation(\n                    points_base, indices_base.reshape((-1, 3)), NUM_MESHES, rand_eng\n                )\n                indices = indices.reshape(-1)\n            else:\n                points = points_base\n                indices = indices_base\n    \n            bounding_box = np.array([points.min(axis=0), points.max(axis=0)])\n    \n            self.points = wp.array(points, dtype=wp.vec3)\n            self.indices = wp.array(indices, dtype=int)\n    \n            bb_min = bounding_box[0]\n            bb_max = bounding_box[1]\n    \n            # Option A (no extra cast, if your NumPy supports dtype in Generator.random)\n            query_points_np = bb_min + (bb_max - bb_min) * rand_eng.random((NUM_QUERY_POINTS, 3), dtype=np.float32)\n    \n            # Option B (always works; uses uniform + cast)\n    \n            self.query_points = wp.array(query_points_np, dtype=wp.vec3)\n    \n            num_faces = int(indices.shape[0] / 3)\n            # create wp Bvh\n            self.lowers = wp.zeros(num_faces, dtype=wp.vec3)\n            self.uppers = wp.zeros(num_faces, dtype=wp.vec3)\n    \n            wp.launch(\n                dim=num_faces,\n                kernel=compute_tri_aabbs,\n                inputs=[self.points, self.indices],\n                outputs=[self.lowers, self.uppers],\n            )\n    \n            if leaf_size == 0:\n                self.bvh = wp.Bvh(self.lowers, self.uppers, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(self.points, wp.array(indices, dtype=int), bvh_constructor=bvh_constructor)\n            else:\n                self.bvh = wp.Bvh(self.lowers, self.uppers, leaf_size=leaf_size, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(\n                    self.points, wp.array(indices, dtype=int), bvh_leaf_size=leaf_size, bvh_constructor=bvh_constructor\n                )\n    \n            buffer_size_per_vertex = 32\n            self.vertex_colliding_triangles_offsets = wp.array(\n                np.arange(0, buffer_size_per_vertex * (NUM_QUERY_POINTS + 1), buffer_size_per_vertex, dtype=int),\n                dtype=wp.int32,\n            )\n            self.vertex_colliding_triangles = wp.zeros(2 * buffer_size_per_vertex * NUM_QUERY_POINTS, dtype=wp.int32)\n            self.vertex_colliding_triangles_count = wp.zeros(NUM_QUERY_POINTS, dtype=wp.int32)\n    \n            self.bvh_vertex_triangle_collision_detection_kernel = get_v_t_collision_kernel(True)\n            self.mesh_vertex_triangle_collision_detection_kernel = get_v_t_collision_kernel(False)\n    \n            wp.load_module(device=device)\n            with wp.ScopedCapture(force_module_load=False) as capture:\n                for _ in range(NUM_TRIES):\n                    wp.launch(\n                        dim=NUM_QUERY_POINTS,\n                        kernel=self.bvh_vertex_triangle_collision_detection_kernel,\n                        inputs=[\n                            query_radius,\n                            self.bvh.id,\n                            self.query_points,\n                            self.vertex_colliding_triangles_offsets,\n                        ],\n                        outputs=[self.vertex_colliding_triangles, self.vertex_colliding_triangles_count],\n                    )\n    \n            self.cuda_graph_bvh_aabb_vs_aabb = capture.graph\n    \n            with wp.ScopedCapture(force_module_load=False) as capture:\n                for _ in range(NUM_TRIES):\n                    wp.launch(\n                        dim=NUM_QUERY_POINTS,\n                        kernel=self.mesh_vertex_triangle_collision_detection_kernel,\n                        inputs=[\n                            query_radius,\n                            self.mesh.id,\n                            self.query_points,\n                            self.vertex_colliding_triangles_offsets,\n                        ],\n                        outputs=[self.vertex_colliding_triangles, self.vertex_colliding_triangles_count],\n                    )\n    \n            self.cuda_graph_mesh_aabb_vs_aabb = capture.graph\n    \n            # warm up run\n            wp.capture_launch(self.cuda_graph_bvh_aabb_vs_aabb)\n            wp.capture_launch(self.cuda_graph_mesh_aabb_vs_aabb)\n            wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "spatial_query.BvhAABBQuery.time_mesh_aabb_vs_aabb_query",
+        "number": 5,
+        "param_names": [
+            "query_radius",
+            "leaf_size",
+            "device",
+            "constructor"
+        ],
+        "params": [
+            [
+                "0.002",
+                "0.008"
+            ],
+            [
+                "0",
+                "8"
+            ],
+            [
+                "'cuda'"
+            ],
+            [
+                "'lbvh'",
+                "'cubql'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 120,
+        "type": "time",
+        "unit": "seconds",
+        "version": "9382d21af0dafdfda13f6491458ebdcfe7f5a7c0518b97631b8617c2383c6535",
+        "warmup_time": -1
+    },
+    "spatial_query.BvhAABBQueryCPU.time_bvh_aabb_vs_aabb_query": {
+        "code": "class BvhAABBQueryCPU:\n    @skip_benchmark_if(USD_AVAILABLE is False)\n    def time_bvh_aabb_vs_aabb_query(self, cache, query_radius, leaf_size, bvh_constructor):\n        self.launches[\"bvh\"].launch()\n\n    @setup_once\n    def setup(self, cache, query_radius, leaf_size, bvh_constructor):\n        wp.init()\n        self.device = wp.get_device(\"cpu\")\n    \n        with wp.ScopedDevice(self.device):\n            wp.load_module(device=self.device)\n    \n            points = wp.array(cache[\"points_np\"], dtype=wp.vec3)\n            indices = wp.array(cache[\"indices_np\"], dtype=int)\n            query_points = wp.array(cache[\"query_points_np\"], dtype=wp.vec3)\n    \n            num_faces = int(cache[\"indices_np\"].shape[0] / 3)\n            lowers = wp.zeros(num_faces, dtype=wp.vec3)\n            uppers = wp.zeros(num_faces, dtype=wp.vec3)\n            wp.launch(dim=num_faces, kernel=compute_tri_aabbs, inputs=[points, indices], outputs=[lowers, uppers])\n    \n            if leaf_size == 0:\n                self.bvh = wp.Bvh(lowers, uppers, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(points, indices, bvh_constructor=bvh_constructor)\n            else:\n                self.bvh = wp.Bvh(lowers, uppers, leaf_size=leaf_size, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(points, indices, bvh_leaf_size=leaf_size, bvh_constructor=bvh_constructor)\n    \n            buffer_size_per_vertex = 32\n            self.vertex_colliding_triangles_offsets = wp.array(\n                np.arange(0, buffer_size_per_vertex * (CPU_NUM_QUERY_POINTS + 1), buffer_size_per_vertex, dtype=int),\n                dtype=wp.int32,\n            )\n            self.vertex_colliding_triangles = wp.zeros(\n                2 * buffer_size_per_vertex * CPU_NUM_QUERY_POINTS, dtype=wp.int32\n            )\n            self.vertex_colliding_triangles_count = wp.zeros(CPU_NUM_QUERY_POINTS, dtype=wp.int32)\n    \n            bvh_kernel = get_v_t_collision_kernel(True)\n            mesh_kernel = get_v_t_collision_kernel(False)\n    \n            self.launches = {}\n            for name, geom_id, kernel, points_arr in (\n                (\"bvh\", self.bvh.id, bvh_kernel, query_points),\n                (\"mesh\", self.mesh.id, mesh_kernel, query_points),\n            ):\n                self.launches[name] = wp.launch(\n                    dim=CPU_NUM_QUERY_POINTS,\n                    kernel=kernel,\n                    inputs=[query_radius, geom_id, points_arr, self.vertex_colliding_triangles_offsets],\n                    outputs=[self.vertex_colliding_triangles, self.vertex_colliding_triangles_count],\n                    record_cmd=True,\n                )\n    \n            # warm up\n            for launch in self.launches.values():\n                launch.launch()\n\n    def setup_cache(self):\n        \"\"\"Load the mesh and generate query points once; device arrays are built per param in setup().\n    \n        Returns NumPy data only: asv pickles the cache to disk, and Warp arrays are not picklable.\n        \"\"\"\n        from pxr import Usd, UsdGeom\n    \n        asset_stage = Usd.Stage.Open(os.path.join(get_asset_directory(), \"bunny.usd\"))\n        mesh_geom = UsdGeom.Mesh(asset_stage.GetPrimAtPath(\"/root/bunny\"))\n    \n        points_np = np.array(mesh_geom.GetPointsAttr().Get())\n        indices_np = np.array(mesh_geom.GetFaceVertexIndicesAttr().Get())\n        bb_min = points_np.min(axis=0)\n        bb_max = points_np.max(axis=0)\n    \n        rng = default_rng(42)\n        query_points_np = (bb_min + (bb_max - bb_min) * rng.random((CPU_NUM_QUERY_POINTS, 3))).astype(np.float32)\n    \n        return {\n            \"points_np\": points_np,\n            \"indices_np\": indices_np,\n            \"query_points_np\": query_points_np,\n        }",
+        "min_run_count": 2,
+        "name": "spatial_query.BvhAABBQueryCPU.time_bvh_aabb_vs_aabb_query",
+        "number": 5,
+        "param_names": [
+            "query_radius",
+            "leaf_size",
+            "constructor"
+        ],
+        "params": [
+            [
+                "0.002",
+                "0.03"
+            ],
+            [
+                "0",
+                "1",
+                "8"
+            ],
+            [
+                "'sah'"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "setup_cache_key": "spatial_query:503",
+        "timeout": 300,
+        "type": "time",
+        "unit": "seconds",
+        "version": "8ed1992f2a12ce4d7639c787342301821782ab68d968792919dfb2caec1d3ef4",
+        "warmup_time": -1
+    },
+    "spatial_query.BvhAABBQueryCPU.time_mesh_aabb_vs_aabb_query": {
+        "code": "class BvhAABBQueryCPU:\n    @skip_benchmark_if(USD_AVAILABLE is False)\n    def time_mesh_aabb_vs_aabb_query(self, cache, query_radius, leaf_size, bvh_constructor):\n        self.launches[\"mesh\"].launch()\n\n    @setup_once\n    def setup(self, cache, query_radius, leaf_size, bvh_constructor):\n        wp.init()\n        self.device = wp.get_device(\"cpu\")\n    \n        with wp.ScopedDevice(self.device):\n            wp.load_module(device=self.device)\n    \n            points = wp.array(cache[\"points_np\"], dtype=wp.vec3)\n            indices = wp.array(cache[\"indices_np\"], dtype=int)\n            query_points = wp.array(cache[\"query_points_np\"], dtype=wp.vec3)\n    \n            num_faces = int(cache[\"indices_np\"].shape[0] / 3)\n            lowers = wp.zeros(num_faces, dtype=wp.vec3)\n            uppers = wp.zeros(num_faces, dtype=wp.vec3)\n            wp.launch(dim=num_faces, kernel=compute_tri_aabbs, inputs=[points, indices], outputs=[lowers, uppers])\n    \n            if leaf_size == 0:\n                self.bvh = wp.Bvh(lowers, uppers, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(points, indices, bvh_constructor=bvh_constructor)\n            else:\n                self.bvh = wp.Bvh(lowers, uppers, leaf_size=leaf_size, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(points, indices, bvh_leaf_size=leaf_size, bvh_constructor=bvh_constructor)\n    \n            buffer_size_per_vertex = 32\n            self.vertex_colliding_triangles_offsets = wp.array(\n                np.arange(0, buffer_size_per_vertex * (CPU_NUM_QUERY_POINTS + 1), buffer_size_per_vertex, dtype=int),\n                dtype=wp.int32,\n            )\n            self.vertex_colliding_triangles = wp.zeros(\n                2 * buffer_size_per_vertex * CPU_NUM_QUERY_POINTS, dtype=wp.int32\n            )\n            self.vertex_colliding_triangles_count = wp.zeros(CPU_NUM_QUERY_POINTS, dtype=wp.int32)\n    \n            bvh_kernel = get_v_t_collision_kernel(True)\n            mesh_kernel = get_v_t_collision_kernel(False)\n    \n            self.launches = {}\n            for name, geom_id, kernel, points_arr in (\n                (\"bvh\", self.bvh.id, bvh_kernel, query_points),\n                (\"mesh\", self.mesh.id, mesh_kernel, query_points),\n            ):\n                self.launches[name] = wp.launch(\n                    dim=CPU_NUM_QUERY_POINTS,\n                    kernel=kernel,\n                    inputs=[query_radius, geom_id, points_arr, self.vertex_colliding_triangles_offsets],\n                    outputs=[self.vertex_colliding_triangles, self.vertex_colliding_triangles_count],\n                    record_cmd=True,\n                )\n    \n            # warm up\n            for launch in self.launches.values():\n                launch.launch()\n\n    def setup_cache(self):\n        \"\"\"Load the mesh and generate query points once; device arrays are built per param in setup().\n    \n        Returns NumPy data only: asv pickles the cache to disk, and Warp arrays are not picklable.\n        \"\"\"\n        from pxr import Usd, UsdGeom\n    \n        asset_stage = Usd.Stage.Open(os.path.join(get_asset_directory(), \"bunny.usd\"))\n        mesh_geom = UsdGeom.Mesh(asset_stage.GetPrimAtPath(\"/root/bunny\"))\n    \n        points_np = np.array(mesh_geom.GetPointsAttr().Get())\n        indices_np = np.array(mesh_geom.GetFaceVertexIndicesAttr().Get())\n        bb_min = points_np.min(axis=0)\n        bb_max = points_np.max(axis=0)\n    \n        rng = default_rng(42)\n        query_points_np = (bb_min + (bb_max - bb_min) * rng.random((CPU_NUM_QUERY_POINTS, 3))).astype(np.float32)\n    \n        return {\n            \"points_np\": points_np,\n            \"indices_np\": indices_np,\n            \"query_points_np\": query_points_np,\n        }",
+        "min_run_count": 2,
+        "name": "spatial_query.BvhAABBQueryCPU.time_mesh_aabb_vs_aabb_query",
+        "number": 5,
+        "param_names": [
+            "query_radius",
+            "leaf_size",
+            "constructor"
+        ],
+        "params": [
+            [
+                "0.002",
+                "0.03"
+            ],
+            [
+                "0",
+                "1",
+                "8"
+            ],
+            [
+                "'sah'"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "setup_cache_key": "spatial_query:503",
+        "timeout": 300,
+        "type": "time",
+        "unit": "seconds",
+        "version": "fe006acc1653694a1aec99de1466181a5ee3cd087213839e8c1b38a782541b28",
+        "warmup_time": -1
+    },
+    "spatial_query.BvhRayQuery.time_bvh_ray_vs_aabb_query": {
+        "code": "class BvhRayQuery:\n    @skip_benchmark_if(USD_AVAILABLE is False)\n    def time_bvh_ray_vs_aabb_query(self, resolution, leaf_size, device, bvh_constructor):\n        wp.capture_launch(self.cuda_graph_bvh_ray_vs_aabb)\n        wp.synchronize_device()\n\n    @setup_once\n    def setup(self, resolution, leaf_size, device, bvh_constructor):\n        cam_pos = wp.vec3(0.0, 0.75, 7.0)\n        cam_rot = wp.quat(0.0, 0.0, 0.0, 1.0)\n        horizontal_aperture = 36.0\n        vertical_aperture = 36.0\n        aspect = horizontal_aperture / vertical_aperture\n        focal_length = 50.0\n    \n        from pxr import Usd, UsdGeom\n    \n        global seed\n    \n        self.device = wp.get_device(device)\n    \n        with wp.ScopedDevice(self.device):\n            rand_eng = default_rng(seed)  # or default_rng() for non-deterministic\n            seed = seed + 1\n    \n            wp.init()\n            wp.load_module(device=self.device)\n    \n            asset_stage = Usd.Stage.Open(os.path.join(get_asset_directory(), \"bunny.usd\"))\n            mesh_geom = UsdGeom.Mesh(asset_stage.GetPrimAtPath(\"/root/bunny\"))\n    \n            points_base = np.array(mesh_geom.GetPointsAttr().Get())\n            indices_base = np.array(mesh_geom.GetFaceVertexIndicesAttr().Get())\n    \n            if NUM_MESHES != 1:\n                points, indices = replicate_mesh_with_random_perturbation(\n                    points_base, indices_base.reshape((-1, 3)), NUM_MESHES, rand_eng\n                )\n                indices = indices.reshape(-1)\n            else:\n                points = points_base\n                indices = indices_base\n    \n            self.points = wp.array(points, dtype=wp.vec3)\n            self.indices = wp.array(indices, dtype=int)\n    \n            bounding_box = np.array([points.min(axis=0), points.max(axis=0)])\n    \n            num_faces = int(indices.shape[0] / 3)\n            # create wp Bvh\n            self.lowers = wp.zeros(num_faces, dtype=wp.vec3)\n            self.uppers = wp.zeros(num_faces, dtype=wp.vec3)\n    \n            wp.launch(\n                dim=num_faces,\n                kernel=compute_tri_aabbs,\n                inputs=[self.points, self.indices],\n                outputs=[self.lowers, self.uppers],\n            )\n            if leaf_size == 0:\n                self.bvh = wp.Bvh(self.lowers, self.uppers, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(self.points, wp.array(indices, dtype=int), bvh_constructor=bvh_constructor)\n            else:\n                self.bvh = wp.Bvh(self.lowers, self.uppers, leaf_size=leaf_size, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(\n                    self.points, wp.array(indices, dtype=int), bvh_leaf_size=leaf_size, bvh_constructor=bvh_constructor\n                )\n    \n            bb_min = bounding_box[0]\n            bb_max = bounding_box[1]\n    \n            # Option A (no extra cast, if your NumPy supports dtype in Generator.random)\n            query_points_np = bb_min + (bb_max - bb_min) * rand_eng.random((NUM_QUERY_POINTS, 3), dtype=np.float32)\n    \n            # Option B (always works; uses uniform + cast)\n    \n            self.query_points = wp.array(query_points_np, dtype=wp.vec3)\n    \n            self.mesh_pos = wp.zeros(1, dtype=wp.vec3, requires_grad=True)\n            self.mesh_rot = wp.array(np.array([0.0, 0.0, 0.0, 1.0]), dtype=wp.quat, requires_grad=True)\n            num_faces = int(indices.shape[0] / 3)\n    \n            # construct camera\n            self.camera = Camera()\n            self.camera.horizontal = horizontal_aperture\n            self.camera.vertical = vertical_aperture\n            self.camera.aspect = aspect\n            self.camera.e = focal_length\n            self.camera.tan = vertical_aperture / (2.0 * focal_length)\n            self.camera.pos = cam_pos\n            self.camera.rot = cam_rot\n    \n            # construct lights\n            self.lights = DirectionalLights()\n            self.lights.dirs = wp.array(np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]]), dtype=wp.vec3, requires_grad=True)\n            self.lights.intensities = wp.array(np.array([2.0, 0.2]), dtype=float, requires_grad=True)\n            self.lights.num_lights = 2\n    \n            # construct rays\n            self.rays_width = resolution\n            self.rays_height = resolution\n            self.num_rays = self.rays_width * self.rays_height\n            self.rays = wp.zeros(self.num_rays, dtype=wp.vec3, requires_grad=True)\n    \n            self.bvh_ray_vs_aabb_query_kernel = get_ray_query_kernel(True)\n            self.mesh_ray_vs_aabb_query_kernel = get_ray_query_kernel(False)\n    \n            wp.load_module(device=device)\n            with wp.ScopedCapture(force_module_load=False) as capture:\n                for _ in range(NUM_TRIES):\n                    wp.launch(\n                        dim=self.num_rays,\n                        kernel=self.bvh_ray_vs_aabb_query_kernel,\n                        inputs=[\n                            self.bvh.id,\n                            self.camera,\n                            self.mesh_pos,\n                            self.mesh_rot,\n                            self.rays_width,\n                            self.rays_height,\n                        ],\n                        outputs=[self.rays],\n                    )\n    \n            self.cuda_graph_bvh_ray_vs_aabb = capture.graph\n    \n            with wp.ScopedCapture(force_module_load=False) as capture:\n                for _ in range(NUM_TRIES):\n                    wp.launch(\n                        dim=self.num_rays,\n                        kernel=self.mesh_ray_vs_aabb_query_kernel,\n                        inputs=[\n                            self.mesh.id,\n                            self.camera,\n                            self.mesh_pos,\n                            self.mesh_rot,\n                            self.rays_width,\n                            self.rays_height,\n                        ],\n                        outputs=[self.rays],\n                    )\n            self.cuda_graph_mesh_ray_vs_aabb = capture.graph\n    \n            # warm up run\n            wp.capture_launch(self.cuda_graph_bvh_ray_vs_aabb)\n            wp.capture_launch(self.cuda_graph_mesh_ray_vs_aabb)\n            wp.synchronize_device()",
+        "min_run_count": 2,
+        "name": "spatial_query.BvhRayQuery.time_bvh_ray_vs_aabb_query",
+        "number": 5,
+        "param_names": [
+            "resolution",
+            "leaf_size",
+            "device",
+            "constructor"
+        ],
+        "params": [
+            [
+                "480",
+                "1080"
+            ],
+            [
+                "0",
+                "8"
+            ],
+            [
+                "'cuda'"
+            ],
+            [
+                "'lbvh'",
+                "'cubql'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 120,
+        "type": "time",
+        "unit": "seconds",
+        "version": "80990c3756511395cfb1b9d4f4dd428f55220a73e97abe45a83930bd2f8bd050",
+        "warmup_time": -1
+    },
+    "spatial_query.BvhRayQuery.time_mesh_ray_vs_aabb_query": {
+        "code": "class BvhRayQuery:\n    @skip_benchmark_if(USD_AVAILABLE is False)\n    def time_mesh_ray_vs_aabb_query(self, resolution, leaf_size, device, bvh_constructor):\n        wp.capture_launch(self.cuda_graph_mesh_ray_vs_aabb)\n        wp.synchronize_device()\n\n    @setup_once\n    def setup(self, resolution, leaf_size, device, bvh_constructor):\n        cam_pos = wp.vec3(0.0, 0.75, 7.0)\n        cam_rot = wp.quat(0.0, 0.0, 0.0, 1.0)\n        horizontal_aperture = 36.0\n        vertical_aperture = 36.0\n        aspect = horizontal_aperture / vertical_aperture\n        focal_length = 50.0\n    \n        from pxr import Usd, UsdGeom\n    \n        global seed\n    \n        self.device = wp.get_device(device)\n    \n        with wp.ScopedDevice(self.device):\n            rand_eng = default_rng(seed)  # or default_rng() for non-deterministic\n            seed = seed + 1\n    \n            wp.init()\n            wp.load_module(device=self.device)\n    \n            asset_stage = Usd.Stage.Open(os.path.join(get_asset_directory(), \"bunny.usd\"))\n            mesh_geom = UsdGeom.Mesh(asset_stage.GetPrimAtPath(\"/root/bunny\"))\n    \n            points_base = np.array(mesh_geom.GetPointsAttr().Get())\n            indices_base = np.array(mesh_geom.GetFaceVertexIndicesAttr().Get())\n    \n            if NUM_MESHES != 1:\n                points, indices = replicate_mesh_with_random_perturbation(\n                    points_base, indices_base.reshape((-1, 3)), NUM_MESHES, rand_eng\n                )\n                indices = indices.reshape(-1)\n            else:\n                points = points_base\n                indices = indices_base\n    \n            self.points = wp.array(points, dtype=wp.vec3)\n            self.indices = wp.array(indices, dtype=int)\n    \n            bounding_box = np.array([points.min(axis=0), points.max(axis=0)])\n    \n            num_faces = int(indices.shape[0] / 3)\n            # create wp Bvh\n            self.lowers = wp.zeros(num_faces, dtype=wp.vec3)\n            self.uppers = wp.zeros(num_faces, dtype=wp.vec3)\n    \n            wp.launch(\n                dim=num_faces,\n                kernel=compute_tri_aabbs,\n                inputs=[self.points, self.indices],\n                outputs=[self.lowers, self.uppers],\n            )\n            if leaf_size == 0:\n                self.bvh = wp.Bvh(self.lowers, self.uppers, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(self.points, wp.array(indices, dtype=int), bvh_constructor=bvh_constructor)\n            else:\n                self.bvh = wp.Bvh(self.lowers, self.uppers, leaf_size=leaf_size, constructor=bvh_constructor)\n                self.mesh = wp.Mesh(\n                    self.points, wp.array(indices, dtype=int), bvh_leaf_size=leaf_size, bvh_constructor=bvh_constructor\n                )\n    \n            bb_min = bounding_box[0]\n            bb_max = bounding_box[1]\n    \n            # Option A (no extra cast, if your NumPy supports dtype in Generator.random)\n            query_points_np = bb_min + (bb_max - bb_min) * rand_eng.random((NUM_QUERY_POINTS, 3), dtype=np.float32)\n    \n            # Option B (always works; uses uniform + cast)\n    \n            self.query_points = wp.array(query_points_np, dtype=wp.vec3)\n    \n            self.mesh_pos = wp.zeros(1, dtype=wp.vec3, requires_grad=True)\n            self.mesh_rot = wp.array(np.array([0.0, 0.0, 0.0, 1.0]), dtype=wp.quat, requires_grad=True)\n            num_faces = int(indices.shape[0] / 3)\n    \n            # construct camera\n            self.camera = Camera()\n            self.camera.horizontal = horizontal_aperture\n            self.camera.vertical = vertical_aperture\n            self.camera.aspect = aspect\n            self.camera.e = focal_length\n            self.camera.tan = vertical_aperture / (2.0 * focal_length)\n            self.camera.pos = cam_pos\n            self.camera.rot = cam_rot\n    \n            # construct lights\n            self.lights = DirectionalLights()\n            self.lights.dirs = wp.array(np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]]), dtype=wp.vec3, requires_grad=True)\n            self.lights.intensities = wp.array(np.array([2.0, 0.2]), dtype=float, requires_grad=True)\n            self.lights.num_lights = 2\n    \n            # construct rays\n            self.rays_width = resolution\n            self.rays_height = resolution\n            self.num_rays = self.rays_width * self.rays_height\n            self.rays = wp.zeros(self.num_rays, dtype=wp.vec3, requires_grad=True)\n    \n            self.bvh_ray_vs_aabb_query_kernel = get_ray_query_kernel(True)\n            self.mesh_ray_vs_aabb_query_kernel = get_ray_query_kernel(False)\n    \n            wp.load_module(device=device)\n            with wp.ScopedCapture(force_module_load=False) as capture:\n                for _ in range(NUM_TRIES):\n                    wp.launch(\n                        dim=self.num_rays,\n                        kernel=self.bvh_ray_vs_aabb_query_kernel,\n                        inputs=[\n                            self.bvh.id,\n                            self.camera,\n                            self.mesh_pos,\n                            self.mesh_rot,\n                            self.rays_width,\n                            self.rays_height,\n                        ],\n                        outputs=[self.rays],\n                    )\n    \n            self.cuda_graph_bvh_ray_vs_aabb = capture.graph\n    \n            with wp.ScopedCapture(force_module_load=False) as capture:\n                for _ in range(NUM_TRIES):\n                    wp.launch(\n                        dim=self.num_rays,\n                        kernel=self.mesh_ray_vs_aabb_query_kernel,\n                        inputs=[\n                            self.mesh.id,\n                            self.camera,\n                            self.mesh_pos,\n                            self.mesh_rot,\n                            self.rays_width,\n                            self.rays_height,\n                        ],\n                        outputs=[self.rays],\n                    )\n            self.cuda_graph_mesh_ray_vs_aabb = capture.graph\n    \n            # warm up run\n            wp.capture_launch(self.cuda_graph_bvh_ray_vs_aabb)\n            wp.capture_launch(self.cuda_graph_mesh_ray_vs_aabb)\n            wp.synchronize_device()",
+        "min_run_count": 2,
+        "name": "spatial_query.BvhRayQuery.time_mesh_ray_vs_aabb_query",
+        "number": 5,
+        "param_names": [
+            "resolution",
+            "leaf_size",
+            "device",
+            "constructor"
+        ],
+        "params": [
+            [
+                "480",
+                "1080"
+            ],
+            [
+                "0",
+                "8"
+            ],
+            [
+                "'cuda'"
+            ],
+            [
+                "'lbvh'",
+                "'cubql'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 120,
+        "type": "time",
+        "unit": "seconds",
+        "version": "ef37b9878efb91b61a6496319bc89d394ccabcf497d545c1209aa9a7aec1b2ee",
+        "warmup_time": -1
+    },
+    "spatial_query.MeshQuery.time_mesh_query_closest_point": {
+        "code": "class MeshQuery:\n    @skip_benchmark_if(USD_AVAILABLE is False)\n    def time_mesh_query_closest_point(self, leaf_size, asset, bvh_constructor):\n        self.cmd_no_sign.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, leaf_size, asset, bvh_constructor):\n        from pxr import Usd, UsdGeom\n    \n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n    \n        asset_stage = Usd.Stage.Open(os.path.join(get_asset_directory(), f\"{asset}.usd\"))\n        mesh_geom = UsdGeom.Mesh(asset_stage.GetPrimAtPath(f\"/root/{asset}\"))\n    \n        points = np.array(mesh_geom.GetPointsAttr().Get())\n        indices = np.array(mesh_geom.GetFaceVertexIndicesAttr().Get())\n        bounding_box = np.array([points.min(axis=0), points.max(axis=0)])\n    \n        global seed\n        rng = np.random.default_rng(seed)\n        seed = seed + 1\n    \n        query_points_np = rng.uniform(bounding_box[0, :], bounding_box[1, :], size=(NUM_QUERY_POINTS, 3)).astype(\n            np.float32\n        )\n        self.query_points = wp.array(query_points_np, dtype=wp.vec3, device=self.device)\n    \n        # create wp mesh\n        if leaf_size == 0:\n            self.mesh = wp.Mesh(\n                points=wp.array(points, dtype=wp.vec3, device=self.device),\n                velocities=None,\n                indices=wp.array(indices, dtype=int, device=self.device),\n                bvh_constructor=bvh_constructor,\n            )\n    \n        else:\n            self.mesh = wp.Mesh(\n                points=wp.array(points, dtype=wp.vec3, device=self.device),\n                velocities=None,\n                indices=wp.array(indices, dtype=int, device=self.device),\n                bvh_leaf_size=leaf_size,\n                bvh_constructor=bvh_constructor,\n            )\n    \n        self.query_closest_points = wp.empty_like(self.query_points, device=self.device)\n    \n        self.cmd_no_sign = wp.launch(\n            sample_mesh_query_no_sign,\n            dim=(NUM_QUERY_POINTS,),\n            inputs=[self.mesh.id, self.query_points, 1.0e7, self.query_closest_points],\n            device=self.device,\n            record_cmd=True,\n        )\n    \n        self.cmd_signed = wp.launch(\n            sample_mesh_query_signed,\n            dim=(NUM_QUERY_POINTS,),\n            inputs=[self.mesh.id, self.query_points, 1.0e7, self.query_closest_points],\n            device=self.device,\n            record_cmd=True,\n        )\n        # Warmup\n        self.cmd_no_sign.launch()\n        self.cmd_signed.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "spatial_query.MeshQuery.time_mesh_query_closest_point",
+        "number": 20,
+        "param_names": [
+            "leaf_size",
+            "asset",
+            "constructor"
+        ],
+        "params": [
+            [
+                "0",
+                "8"
+            ],
+            [
+                "'bunny'",
+                "'rocks'"
+            ],
+            [
+                "'lbvh'",
+                "'cubql'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 60,
+        "type": "time",
+        "unit": "seconds",
+        "version": "63e79928bd6d91a2589dfd5345d9878a5e3b6841dbfad139efa3e591caff4a47",
+        "warmup_time": -1
+    },
+    "spatial_query.MeshQuery.time_mesh_query_closest_point_signed": {
+        "code": "class MeshQuery:\n    @skip_benchmark_if(USD_AVAILABLE is False)\n    def time_mesh_query_closest_point_signed(self, leaf_size, asset, bvh_constructor):\n        self.cmd_signed.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, leaf_size, asset, bvh_constructor):\n        from pxr import Usd, UsdGeom\n    \n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n    \n        asset_stage = Usd.Stage.Open(os.path.join(get_asset_directory(), f\"{asset}.usd\"))\n        mesh_geom = UsdGeom.Mesh(asset_stage.GetPrimAtPath(f\"/root/{asset}\"))\n    \n        points = np.array(mesh_geom.GetPointsAttr().Get())\n        indices = np.array(mesh_geom.GetFaceVertexIndicesAttr().Get())\n        bounding_box = np.array([points.min(axis=0), points.max(axis=0)])\n    \n        global seed\n        rng = np.random.default_rng(seed)\n        seed = seed + 1\n    \n        query_points_np = rng.uniform(bounding_box[0, :], bounding_box[1, :], size=(NUM_QUERY_POINTS, 3)).astype(\n            np.float32\n        )\n        self.query_points = wp.array(query_points_np, dtype=wp.vec3, device=self.device)\n    \n        # create wp mesh\n        if leaf_size == 0:\n            self.mesh = wp.Mesh(\n                points=wp.array(points, dtype=wp.vec3, device=self.device),\n                velocities=None,\n                indices=wp.array(indices, dtype=int, device=self.device),\n                bvh_constructor=bvh_constructor,\n            )\n    \n        else:\n            self.mesh = wp.Mesh(\n                points=wp.array(points, dtype=wp.vec3, device=self.device),\n                velocities=None,\n                indices=wp.array(indices, dtype=int, device=self.device),\n                bvh_leaf_size=leaf_size,\n                bvh_constructor=bvh_constructor,\n            )\n    \n        self.query_closest_points = wp.empty_like(self.query_points, device=self.device)\n    \n        self.cmd_no_sign = wp.launch(\n            sample_mesh_query_no_sign,\n            dim=(NUM_QUERY_POINTS,),\n            inputs=[self.mesh.id, self.query_points, 1.0e7, self.query_closest_points],\n            device=self.device,\n            record_cmd=True,\n        )\n    \n        self.cmd_signed = wp.launch(\n            sample_mesh_query_signed,\n            dim=(NUM_QUERY_POINTS,),\n            inputs=[self.mesh.id, self.query_points, 1.0e7, self.query_closest_points],\n            device=self.device,\n            record_cmd=True,\n        )\n        # Warmup\n        self.cmd_no_sign.launch()\n        self.cmd_signed.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "spatial_query.MeshQuery.time_mesh_query_closest_point_signed",
+        "number": 20,
+        "param_names": [
+            "leaf_size",
+            "asset",
+            "constructor"
+        ],
+        "params": [
+            [
+                "0",
+                "8"
+            ],
+            [
+                "'bunny'",
+                "'rocks'"
+            ],
+            [
+                "'lbvh'",
+                "'cubql'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 60,
+        "type": "time",
+        "unit": "seconds",
+        "version": "326a1f7025f36de6f8f8c0283bf028a638eac380dbbf882b9c6c296cbfbb6181",
+        "warmup_time": -1
+    },
+    "texture.Texture2DArray.time_cuda": {
+        "code": "class Texture2DArray:\n    def time_cuda(self, handle_pattern):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, handle_pattern):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        self.textures = [_make_texture2d(_make_texture2d_data(42 + i), self.device) for i in range(NUM_TEXTURES)]\n        self.texture_array = wp.array(self.textures, dtype=wp.Texture2D, device=self.device)\n        self.output = wp.empty(NUM_QUERIES, dtype=wp.vec4f, device=self.device)\n        self.cmd = wp.launch(\n            sample_texture2d_array,\n            dim=NUM_QUERIES,\n            inputs=[self.texture_array, handle_pattern == \"lane_varying\"],\n            outputs=[self.output],\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "texture.Texture2DArray.time_cuda",
+        "number": 100,
+        "param_names": [
+            "handle_pattern"
+        ],
+        "params": [
+            [
+                "'warp_uniform'",
+                "'lane_varying'"
+            ]
+        ],
+        "repeat": 5,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "45de9ab48e694cbe5bb1e39b378c8369af45d708f1f5f64205cd4fee17e9768c",
+        "warmup_time": -1
+    },
+    "texture.Texture2DTriplanar.time_cuda": {
+        "code": "class Texture2DTriplanar:\n    def time_cuda(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        self.texture = _make_texture2d(_make_texture2d_data(42), self.device)\n        self.output = wp.empty(NUM_QUERIES, dtype=wp.vec4f, device=self.device)\n        self.cmd = wp.launch(\n            sample_texture2d_triplanar,\n            dim=NUM_QUERIES,\n            inputs=[self.texture],\n            outputs=[self.output],\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "texture.Texture2DTriplanar.time_cuda",
+        "number": 100,
+        "param_names": [],
+        "params": [],
+        "repeat": 5,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "5667b0b720fb800ba724713bf893b6c9d7ebb18baf0e525bf78d5098fe7375e8",
+        "warmup_time": -1
+    },
+    "texture.Texture2DUv.time_cuda": {
+        "code": "class Texture2DUv:\n    def time_cuda(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        self.texture = _make_texture2d(_make_texture2d_data(42), self.device)\n        self.output = wp.empty(NUM_QUERIES, dtype=wp.vec4f, device=self.device)\n        self.cmd = wp.launch(\n            sample_texture2d_vec4,\n            dim=NUM_QUERIES,\n            inputs=[self.texture],\n            outputs=[self.output],\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "texture.Texture2DUv.time_cuda",
+        "number": 256,
+        "param_names": [],
+        "params": [],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "1b5a4a0150d2f001f4359f6edd1ad468e04d6d6a6fbf5f95e63b709da22d5b48",
+        "warmup_time": -1
+    },
+    "texture.Texture3DArray.time_cuda": {
+        "code": "class Texture3DArray:\n    def time_cuda(self, handle_pattern):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, handle_pattern):\n        wp.init()\n        if handle_pattern == \"warp_uniform\":\n            self.number = 200\n            self.repeat = 10\n        else:\n            self.number = 75\n            self.repeat = 5\n        self.device = wp.get_device(\"cuda:0\")\n        self.textures = [_make_texture3d(_make_texture3d_data(42 + i), self.device) for i in range(NUM_TEXTURES)]\n        self.texture_array = wp.array(self.textures, dtype=wp.Texture3D, device=self.device)\n        self.output = wp.empty(NUM_QUERIES, dtype=wp.vec3f, device=self.device)\n        self.cmd = wp.launch(\n            sample_texture3d_array,\n            dim=NUM_QUERIES,\n            inputs=[self.texture_array, handle_pattern == \"lane_varying\"],\n            outputs=[self.output],\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "texture.Texture3DArray.time_cuda",
+        "number": 75,
+        "param_names": [
+            "handle_pattern"
+        ],
+        "params": [
+            [
+                "'warp_uniform'",
+                "'lane_varying'"
+            ]
+        ],
+        "repeat": 5,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "359471188488a88cc0a2504e0877ba96297c39f69b90e059d2b12f9901499aa9",
+        "warmup_time": -1
+    },
+    "texture.Texture3DFiniteDifferenceGradient.time_cuda": {
+        "code": "class Texture3DFiniteDifferenceGradient:\n    def time_cuda(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        self.texture = _make_texture3d(_make_texture3d_data(42), self.device)\n        self.output = wp.empty(NUM_QUERIES, dtype=wp.vec3f, device=self.device)\n        self.cmd = wp.launch(\n            sample_texture3d_finite_difference_gradient,\n            dim=NUM_QUERIES,\n            inputs=[self.texture],\n            outputs=[self.output],\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "texture.Texture3DFiniteDifferenceGradient.time_cuda",
+        "number": 256,
+        "param_names": [],
+        "params": [],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "5ea659b3c9f1a15a4249c62c9a12e1795a37c2e3ab35e6bb384cf64607c263ff",
+        "warmup_time": -1
+    },
+    "texture.Texture3DValue.time_cuda": {
+        "code": "class Texture3DValue:\n    def time_cuda(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        self.texture = _make_texture3d(_make_texture3d_data(42), self.device)\n        self.output = wp.empty(NUM_QUERIES, dtype=float, device=self.device)\n        self.cmd = wp.launch(\n            sample_texture3d_value,\n            dim=NUM_QUERIES,\n            inputs=[self.texture],\n            outputs=[self.output],\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "texture.Texture3DValue.time_cuda",
+        "number": 512,
+        "param_names": [],
+        "params": [],
+        "repeat": 15,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "a5d4cd4ba982001c4c1e60ec884d4d77352956c9951e643bcbeb22bf2fd34db8",
+        "warmup_time": -1
+    },
+    "texture.TextureBaseVector.time_cuda": {
+        "code": "class TextureBaseVector:\n    def time_cuda(self, sample):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, sample):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        dimension = sample[:2]\n        num_channels = int(sample[-1])\n        dtype = wp.vec2f if num_channels == 2 else wp.vec4f\n    \n        if dimension == \"1d\":\n            self.texture = _make_texture1d(_make_texture1d_data(42, num_channels), self.device)\n            kernel = sample_texture1d_vec2 if num_channels == 2 else sample_texture1d_vec4\n        elif dimension == \"2d\":\n            self.texture = _make_texture2d(_make_texture2d_data(42, num_channels), self.device)\n            kernel = sample_texture2d_vec2 if num_channels == 2 else sample_texture2d_vec4\n        else:\n            self.texture = _make_texture3d(_make_texture3d_data(42, num_channels), self.device)\n            kernel = sample_texture3d_vec2 if num_channels == 2 else sample_texture3d_vec4\n    \n        self.output = wp.empty(NUM_QUERIES, dtype=dtype, device=self.device)\n        self.cmd = wp.launch(\n            kernel,\n            dim=NUM_QUERIES,\n            inputs=[self.texture],\n            outputs=[self.output],\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "texture.TextureBaseVector.time_cuda",
+        "number": 64,
+        "param_names": [
+            "sample"
+        ],
+        "params": [
+            [
+                "'1d_vec2'",
+                "'1d_vec4'",
+                "'2d_vec2'",
+                "'2d_vec4'",
+                "'3d_vec2'",
+                "'3d_vec4'"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "9883ef17163d12e47917819ad4c4fd40c4ecabfb76e3fd3effa0a13c865ce1b5",
+        "warmup_time": -1
+    },
+    "tile.array_sum.ArraySumSimt.time_cuda": {
+        "code": "class ArraySumSimt:\n    def time_cuda(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        self._initialize()\n        self.result.zero_()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "tile.array_sum.ArraySumSimt.time_cuda",
+        "number": 100,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "63b8e38756e5627a49f54acf8418150f0e084e539e90b4627a9e9d97bc8a2ade",
+        "warmup_time": -1
+    },
+    "tile.array_sum.ArraySumTileCPU.time_cpu": {
+        "code": "class ArraySumTileCPU:\n    def time_cpu(self):\n        self.cmd.launch()\n\n    def setup(self):\n        wp.config.enable_cpu_blocks = True\n        self._setup_benchmark(\"cpu\", 64)",
+        "min_run_count": 2,
+        "name": "tile.array_sum.ArraySumTileCPU.time_cpu",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "321a4e08a105496c14031baf2e2e844bde28dffacd1b516f3d4f159d093323a2",
+        "warmup_time": -1
+    },
+    "tile.array_sum.ArraySumTileCUDA.time_cuda": {
+        "code": "class ArraySumTileCUDA:\n    def time_cuda(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        self._setup_benchmark(\"cuda:0\", None)",
+        "min_run_count": 2,
+        "name": "tile.array_sum.ArraySumTileCUDA.time_cuda",
+        "number": 100,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "ed45764951a9b321a463a402f8dfc260304163ed973d86e05b3d80dd982fc0e4",
+        "warmup_time": -1
+    },
+    "tile.compile_cholesky.ColdCompileCholeskyLTO.time_cuda_codegen": {
+        "code": "class ColdCompileCholeskyLTO:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()\n        wp.clear_lto_cache()",
+        "min_run_count": 2,
+        "name": "tile.compile_cholesky.ColdCompileCholeskyLTO.time_cuda_codegen",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "3c774ee5a8f18485dbd5f6f8972c6d953929a384b548bd6c3a996d06981c267d",
+        "warmup_time": -1
+    },
+    "tile.compile_cholesky.WarmCompileCholeskyLTO.time_cuda_codegen": {
+        "code": "class WarmCompileCholeskyLTO:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n        clear_kernel_cache()\n        cholesky.module.unload()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()\n        wp.clear_lto_cache()\n        wp.load_module(device=\"cuda:0\")\n        clear_kernel_cache()\n        cholesky.module.unload()",
+        "min_run_count": 2,
+        "name": "tile.compile_cholesky.WarmCompileCholeskyLTO.time_cuda_codegen",
+        "number": 10,
+        "param_names": [],
+        "params": [],
+        "repeat": 1,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "b3d03a1bf965a228fcdff5fe1ffe26de251ebe8b70c63fd5a792be63672343e4",
+        "warmup_time": -1
+    },
+    "tile.compile_fft.ColdCompileFftLTO.time_cuda_codegen": {
+        "code": "class ColdCompileFftLTO:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()\n        wp.clear_lto_cache()",
+        "min_run_count": 2,
+        "name": "tile.compile_fft.ColdCompileFftLTO.time_cuda_codegen",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "f2e3b899119e0493e52ea9d20410fcc77abf575133905284c965cbee64603f47",
+        "warmup_time": -1
+    },
+    "tile.compile_fft.WarmCompileFftLTO.time_cuda_codegen": {
+        "code": "class WarmCompileFftLTO:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n        clear_kernel_cache()\n        fft_tiled.module.unload()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()\n        wp.clear_lto_cache()\n        wp.load_module(device=\"cuda:0\")\n        clear_kernel_cache()\n        fft_tiled.module.unload()",
+        "min_run_count": 2,
+        "name": "tile.compile_fft.WarmCompileFftLTO.time_cuda_codegen",
+        "number": 10,
+        "param_names": [],
+        "params": [],
+        "repeat": 1,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "08dc374436482bea810a1b722a722c25118d2277f0e4fadc3369cdd0d4c81ca2",
+        "warmup_time": -1
+    },
+    "tile.compile_gemm.ColdCompileGemmLTO.time_cuda_codegen": {
+        "code": "class ColdCompileGemmLTO:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()\n        wp.clear_lto_cache()",
+        "min_run_count": 2,
+        "name": "tile.compile_gemm.ColdCompileGemmLTO.time_cuda_codegen",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 2,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 120.0,
+        "type": "time",
+        "unit": "seconds",
+        "version": "160ac2d8549a36eba73b36518d2150cb16dfc79ba62a7dd8ba4108f6311bfd85",
+        "warmup_time": -1
+    },
+    "tile.compile_gemm.WarmCompileGemmLTO.time_cuda_codegen": {
+        "code": "class WarmCompileGemmLTO:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n        clear_kernel_cache()\n        tile_gemm.module.unload()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()\n        wp.clear_lto_cache()\n        wp.load_module(device=\"cuda:0\")\n        clear_kernel_cache()\n        tile_gemm.module.unload()",
+        "min_run_count": 2,
+        "name": "tile.compile_gemm.WarmCompileGemmLTO.time_cuda_codegen",
+        "number": 10,
+        "param_names": [],
+        "params": [],
+        "repeat": 1,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 120.0,
+        "type": "time",
+        "unit": "seconds",
+        "version": "e5928151770bd47cbc342f666ff5360af77d31292b13dbcfcf8260ef8c411bdc",
+        "warmup_time": -1
+    },
+    "tile.gemm.Gemm1024CPU.time_cpu": {
+        "code": "class Gemm1024CPU:\n    def time_cpu(self):\n        self.cmd.launch()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.set_module_options({\"fast_math\": True, \"enable_backward\": False})\n        wp.config.enable_cpu_blocks = True\n        _setup_gemm(self, 1024, 64, 64, 64, 128, \"cpu\")",
+        "min_run_count": 2,
+        "name": "tile.gemm.Gemm1024CPU.time_cpu",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "3ca816f446a0e29ca295c23cfe7b3c4a0d8959ce75208adb14596a1d50a21530",
+        "warmup_time": -1
+    },
+    "tile.gemm.Gemm1024CUDA.time_cuda": {
+        "code": "class Gemm1024CUDA:\n    def time_cuda(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.set_module_options({\"fast_math\": True, \"enable_backward\": False})\n        _setup_gemm(self, 1024, 64, 64, 64, 128, \"cuda:0\")",
+        "min_run_count": 2,
+        "name": "tile.gemm.Gemm1024CUDA.time_cuda",
+        "number": 1000,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "68e6fa274dc54a0e7eda66ad32e118f423502251f1564c74e7a80fd96bb97739",
+        "warmup_time": -1
+    },
+    "tile.gemm.Gemm256CPU.time_cpu": {
+        "code": "class Gemm256CPU:\n    def time_cpu(self):\n        self.cmd.launch()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        wp.config.enable_cpu_blocks = True\n        _setup_gemm(self, 256, 16, 16, 64, 64, \"cpu\")",
+        "min_run_count": 2,
+        "name": "tile.gemm.Gemm256CPU.time_cpu",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "35d5a76768eb8974afe1ad2aa64027f64e26f25b51599671d957013cd9b98b74",
+        "warmup_time": -1
+    },
+    "tile.gemm.Gemm256CUDA.time_cuda": {
+        "code": "class Gemm256CUDA:\n    def time_cuda(self):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        _setup_gemm(self, 256, 16, 16, 64, 64, \"cuda:0\")",
+        "min_run_count": 2,
+        "name": "tile.gemm.Gemm256CUDA.time_cuda",
+        "number": 0,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "a89d365905204dfc13348550a8c56841ef74b92654b242a0a4a96cf362ab3c12",
+        "warmup_time": -1
+    },
+    "tile.load_store_coalesced.LoadStoreCoalesced.time_cuda": {
+        "code": "class LoadStoreCoalesced:\n    def time_cuda(self, tile_size, dtype_name):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, tile_size, dtype_name):\n        wp.init()\n        wp.set_module_options({\"fast_math\": True, \"enable_backward\": False})\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n    \n        dtype = _DTYPE_MAP[dtype_name]\n        elem_bytes = wp.types.type_size_in_bytes(dtype)\n        elem_floats = elem_bytes // 4\n        block_dim = 128\n        rng = np.random.default_rng(42)\n    \n        n = _TARGET_BYTES // elem_bytes\n        n = (n // tile_size) * tile_size\n    \n        shape = (n, elem_floats) if elem_floats > 1 else (n,)\n        self.a = wp.array(rng.random(shape, dtype=np.float32), dtype=dtype, device=self.device)\n        self.b = wp.empty_like(self.a)\n        kernel = _create_kernel_1d(tile_size, dtype)\n        dim = (n // tile_size,)\n    \n        self.cmd = wp.launch_tiled(\n            kernel,\n            dim=dim,\n            inputs=[self.a],\n            outputs=[self.b],\n            block_dim=block_dim,\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "tile.load_store_coalesced.LoadStoreCoalesced.time_cuda",
+        "number": 500,
+        "param_names": [
+            "tile_size",
+            "dtype"
+        ],
+        "params": [
+            [
+                "8",
+                "16",
+                "32"
+            ],
+            [
+                "'float32'",
+                "'mat33'",
+                "'mat44'",
+                "'mat66'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "50aead7164612a030969c4a250a67139a369010577981cde1ec5f07e3626e518",
+        "warmup_time": -1
+    },
+    "tile.load_store_register.LoadStoreRegisterCPU.time_cpu": {
+        "code": "class LoadStoreRegisterCPU:\n    def time_cpu(self, ndim, block_dim):\n        self.cmd.launch()\n\n    @setup_once\n    def setup(self, ndim, block_dim):\n        wp.config.enable_cpu_blocks = True\n        self._setup_benchmark(ndim, \"float32\", \"cpu\", block_dim)",
+        "min_run_count": 2,
+        "name": "tile.load_store_register.LoadStoreRegisterCPU.time_cpu",
+        "number": 1,
+        "param_names": [
+            "ndim",
+            "block_dim"
+        ],
+        "params": [
+            [
+                "2",
+                "3"
+            ],
+            [
+                "1",
+                "64"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "eed57d16472224007476c8766f90d4e6232d4213f3056c3475ff8ffd4b780899",
+        "warmup_time": -1
+    },
+    "tile.load_store_register.LoadStoreRegisterCUDA.time_cuda": {
+        "code": "class LoadStoreRegisterCUDA:\n    def time_cuda(self, ndim, dtype_name):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, ndim, dtype_name):\n        self._setup_benchmark(ndim, dtype_name, \"cuda:0\", 64)",
+        "min_run_count": 2,
+        "name": "tile.load_store_register.LoadStoreRegisterCUDA.time_cuda",
+        "number": 200,
+        "param_names": [
+            "ndim",
+            "dtype"
+        ],
+        "params": [
+            [
+                "1",
+                "2",
+                "3"
+            ],
+            [
+                "'float32'",
+                "'vec3'",
+                "'mat22'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "20a37698194cd9143636f4ae932c553d968770eb923a1620668b447b1fb9d02f",
+        "warmup_time": -1
+    },
+    "tile.load_store_scalar.LoadStoreScalar.time_cuda": {
+        "code": "class LoadStoreScalar:\n    def time_cuda(self, ndim, dtype_name):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, ndim, dtype_name):\n        wp.init()\n        wp.set_module_options({\"fast_math\": True, \"enable_backward\": False})\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n    \n        dtype = _DTYPE_MAP[dtype_name]\n        elem_bytes = wp.types.type_size_in_bytes(dtype)\n        elem_floats = elem_bytes // 4\n        tile_dim = _TILE_DIMS[ndim]\n        block_dim = 128\n        rng = np.random.default_rng(42)\n    \n        if ndim == 1:\n            # Slice [::2] to create a strided (non-contiguous) view that forces\n            # the scalar path. stride = 2*sizeof(T) != sizeof(T).\n            n = _TARGET_BYTES // elem_bytes\n            n = (n // tile_dim) * tile_dim\n            shape = (n * 2, elem_floats) if elem_floats > 1 else (n * 2,)\n            base = wp.array(rng.random(shape, dtype=np.float32), dtype=dtype, device=self.device)\n            self.a = base[::2]\n            base_out = wp.array(rng.random(shape, dtype=np.float32), dtype=dtype, device=self.device)\n            self.b = base_out[::2]\n            kernel = _create_kernel_1d(tile_dim, dtype)\n            dim = (n // tile_dim,)\n        elif ndim == 2:\n            edge = int(np.sqrt(_TARGET_BYTES / elem_bytes))\n            edge = (edge // tile_dim) * tile_dim\n            shape = (edge, edge, elem_floats) if elem_floats > 1 else (edge, edge)\n            self.a = wp.array(rng.random(shape, dtype=np.float32), dtype=dtype, device=self.device)\n            self.b = wp.empty_like(self.a)\n            kernel = _create_kernel_2d(tile_dim, dtype)\n            dim = (edge // tile_dim, edge // tile_dim)\n        else:\n            edge = int(round((_TARGET_BYTES / elem_bytes) ** (1 / 3)))\n            edge = max(edge, tile_dim)\n            edge = (edge // tile_dim) * tile_dim\n            shape = (edge, edge, edge, elem_floats) if elem_floats > 1 else (edge, edge, edge)\n            self.a = wp.array(rng.random(shape, dtype=np.float32), dtype=dtype, device=self.device)\n            self.b = wp.empty_like(self.a)\n            kernel = _create_kernel_3d(tile_dim, dtype)\n            dim = (edge // tile_dim, edge // tile_dim, edge // tile_dim)\n    \n        self.cmd = wp.launch_tiled(\n            kernel,\n            dim=dim,\n            inputs=[self.a],\n            outputs=[self.b],\n            block_dim=block_dim,\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "tile.load_store_scalar.LoadStoreScalar.time_cuda",
+        "number": 500,
+        "param_names": [
+            "ndim",
+            "dtype"
+        ],
+        "params": [
+            [
+                "1",
+                "2",
+                "3"
+            ],
+            [
+                "'float32'",
+                "'vec3'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "a2d1f9d13531e472a5609770547dc883015df3f0d811b3832d47c33474abd673",
+        "warmup_time": -1
+    },
+    "tile.load_store_vectorized.LoadStoreVectorized.time_cuda": {
+        "code": "class LoadStoreVectorized:\n    def time_cuda(self, size, ndim, dtype_name):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, size, ndim, dtype_name):\n        wp.init()\n        wp.set_module_options({\"fast_math\": True, \"enable_backward\": False})\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n    \n        dtype = _DTYPE_MAP[dtype_name]\n        tile_dim = _tile_dim(ndim, dtype_name)\n        elem_bytes = wp.types.type_size_in_bytes(dtype)\n        elem_floats = elem_bytes // 4\n        block_dim = 128\n        rng = np.random.default_rng(42)\n    \n        if ndim == 2:\n            edge = (size // tile_dim) * tile_dim\n            shape = (edge, edge, elem_floats) if elem_floats > 1 else (edge, edge)\n            self.a = wp.array(rng.random(shape, dtype=np.float32), dtype=dtype, device=self.device)\n            self.b = wp.empty_like(self.a)\n            kernel = _create_kernel_2d(tile_dim, dtype)\n            dim = (edge // tile_dim, edge // tile_dim)\n        else:\n            edge = int(round(size ** (2 / 3)))\n            edge = max(edge, tile_dim)\n            edge = (edge // tile_dim) * tile_dim\n            shape = (edge, edge, edge, elem_floats) if elem_floats > 1 else (edge, edge, edge)\n            self.a = wp.array(rng.random(shape, dtype=np.float32), dtype=dtype, device=self.device)\n            self.b = wp.empty_like(self.a)\n            kernel = _create_kernel_3d(tile_dim, dtype)\n            dim = (edge // tile_dim, edge // tile_dim, edge // tile_dim)\n    \n        self.cmd = wp.launch_tiled(\n            kernel,\n            dim=dim,\n            inputs=[self.a],\n            outputs=[self.b],\n            block_dim=block_dim,\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "tile.load_store_vectorized.LoadStoreVectorized.time_cuda",
+        "number": 500,
+        "param_names": [
+            "size",
+            "ndim",
+            "dtype"
+        ],
+        "params": [
+            [
+                "1024",
+                "2048"
+            ],
+            [
+                "2",
+                "3"
+            ],
+            [
+                "'float32'",
+                "'vec3'",
+                "'mat22'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "1c502174d168d3fd25a6cfbb78fd110791ca7a1608d845017a9c5313dc7d7f19",
+        "warmup_time": -1
+    },
+    "tile.tile_alloc_shared.TileEmptySharedStore.time_cuda": {
+        "code": "class TileEmptySharedStore:\n    def time_cuda(self, tile_dim):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, tile_dim):\n        wp.init()\n        # Skip on commits where wp.tile_empty isn't registered yet (e.g.,\n        # asv continuous comparing against a base ref that predates this MR).\n        # Becomes inert after this MR merges; can be removed at that point.\n        from warp._src.context import builtin_functions  # noqa: PLC0415\n    \n        if \"tile_empty\" not in builtin_functions:\n            raise NotImplementedError(\"wp.tile_empty is not available in this Warp build\")\n        wp.set_module_options({\"fast_math\": True, \"enable_backward\": False})\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n    \n        kernel = _create_empty_kernel(tile_dim)\n        grid_dim = _OUTPUT_EDGE // tile_dim\n        self.out = wp.empty((_OUTPUT_EDGE, _OUTPUT_EDGE), dtype=wp.float32, device=self.device)\n    \n        self.cmd = wp.launch_tiled(\n            kernel,\n            dim=(grid_dim, grid_dim),\n            inputs=[],\n            outputs=[self.out],\n            block_dim=_BLOCK_DIM,\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "tile.tile_alloc_shared.TileEmptySharedStore.time_cuda",
+        "number": 100,
+        "param_names": [
+            "tile_dim"
+        ],
+        "params": [
+            [
+                "64",
+                "128"
+            ]
+        ],
+        "repeat": 50,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "4768b89b41ba994714cd46a4efd6428512c9b022790e339768e4c4f362c517a5",
+        "warmup_time": -1
+    },
+    "tile.tile_alloc_shared.TileZerosSharedStore.time_cuda": {
+        "code": "class TileZerosSharedStore:\n    def time_cuda(self, tile_dim):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, tile_dim):\n        wp.init()\n        wp.set_module_options({\"fast_math\": True, \"enable_backward\": False})\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n    \n        kernel = _create_zeros_kernel(tile_dim)\n        grid_dim = _OUTPUT_EDGE // tile_dim\n        self.out = wp.empty((_OUTPUT_EDGE, _OUTPUT_EDGE), dtype=wp.float32, device=self.device)\n    \n        self.cmd = wp.launch_tiled(\n            kernel,\n            dim=(grid_dim, grid_dim),\n            inputs=[],\n            outputs=[self.out],\n            block_dim=_BLOCK_DIM,\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "tile.tile_alloc_shared.TileZerosSharedStore.time_cuda",
+        "number": 100,
+        "param_names": [
+            "tile_dim"
+        ],
+        "params": [
+            [
+                "64",
+                "128"
+            ]
+        ],
+        "repeat": 50,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "a8264bd65d7d1caf72405154b13e862c6adfd4dfb129e5fdc2cdf858de6361bc",
+        "warmup_time": -1
+    },
+    "tile.tile_nbody.TileNBody.time_simt": {
+        "code": "class TileNBody:\n    def time_simt(self):\n        self.simt_cmd.launch()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        self._initialize()\n        self.vel_array.zero_()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "tile.tile_nbody.TileNBody.time_simt",
+        "number": 10,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "8bff1410966663c48147c4bda3ba968629fa9ae412ca06c2fec8ce18c73fac4f",
+        "warmup_time": -1
+    },
+    "tile.tile_nbody.TileNBody.time_tile": {
+        "code": "class TileNBody:\n    def time_tile(self):\n        self.tile_cmd.launch()\n        wp.synchronize_device(self.device)\n\n    def setup(self):\n        self._initialize()\n        self.vel_array.zero_()\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "tile.tile_nbody.TileNBody.time_tile",
+        "number": 10,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "5607fa3b7d8dc3882f6545c8d2d56c30200c2d258ecb4c4d5eddd6fd130ceb25",
+        "warmup_time": -1
+    },
+    "version": 2
+}

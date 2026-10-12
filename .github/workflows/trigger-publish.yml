@@ -1,0 +1,21 @@
+# Lives on the results branch: GitHub runs push-triggered workflows from the
+# pushed branch's own tree, so publish.yml on main never sees results pushes.
+# Hands off to publish.yml on main (the github-pages environment only accepts
+# deploys from main). workflow_dispatch is the documented exception that
+# GITHUB_TOKEN may trigger. Bursts collapse: publish.yml keeps one pending run.
+name: trigger-publish
+
+on:
+  push:
+    branches: [results]
+
+permissions:
+  actions: write
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh workflow run publish.yml --ref main -f deploy=true -R "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ github.token }}

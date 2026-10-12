@@ -2,7 +2,11 @@ name: publish
 
 on:
   schedule:
+    # Publish every 15 min (GitHub delays and drops scheduled runs; a run with
+    # nothing new skips the build). The watchdog runs only on the hourly entry,
+    # so an outage emails once an hour, not four times.
     - cron: "23 * * * *"
+    - cron: "8,38,53 * * * *"
   workflow_dispatch:
     inputs:
       deploy:
@@ -21,6 +25,7 @@ permissions:
 
 jobs:
   watchdog:
+    if: github.event_name != 'schedule' || github.event.schedule == '23 * * * *'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

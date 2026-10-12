@@ -1,0 +1,9 @@
+{
+    "arch": "x86_64",
+    "cpu": "AMD EPYC-Genoa Processor",
+    "machine": "rtx-pro-4500",
+    "num_cpu": "16",
+    "os": "Linux 6.8.0-134-generic",
+    "ram": "32855676",
+    "version": 1
+}

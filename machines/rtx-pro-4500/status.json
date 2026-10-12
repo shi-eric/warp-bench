@@ -1,13 +1,13 @@
 {
-  "free_gb": 227.2,
+  "free_gb": 226.1,
   "fs_errors": 0,
   "last_cycle": "ok",
   "machine": "rtx-pro-4500",
   "oom": 0,
   "problem": null,
   "problem_since": null,
-  "queue": 6,
-  "updated": "2026-10-12T07:01:43Z",
+  "queue": 2,
+  "updated": "2026-10-12T10:00:18Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

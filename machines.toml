@@ -2,3 +2,8 @@
 active = true             # set false at L40 retirement; data stays published
 max_age_hours = 48        # no commit for this machine (results or heartbeat) -> fails
 max_unhealthy_hours = 24  # status.json reporting a problem this long -> fails
+
+[machines.rtx-pro-4500]
+active = true
+max_age_hours = 48
+max_unhealthy_hours = 24

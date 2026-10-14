@@ -768,7 +768,9 @@
                 "'energy'",
                 "'forces'",
                 "'hessian'",
-                "'hessian_compressed'"
+                "'hessian_compressed'",
+                "'hessian_mapped'",
+                "'hessian_mapped_atomic'"
             ],
             [
                 "'generic'",

@@ -1,13 +1,13 @@
 {
-  "free_gb": 172.5,
+  "free_gb": 172.2,
   "fs_errors": 0,
-  "last_cycle": "idle",
+  "last_cycle": "ok",
   "machine": "ershi-asv-runner",
   "oom": 0,
   "problem": null,
   "problem_since": null,
   "queue": 0,
-  "updated": "2026-10-16T12:08:19Z",
+  "updated": "2026-10-16T19:10:27Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "12.9",

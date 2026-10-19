@@ -291,6 +291,36 @@
         "version": "e6ffdc8a0a41813b981ad87f4cfafa6a20c5ff2a49b5a799016507991fe503eb",
         "warmup_time": -1
     },
+    "api.python_builtins.PythonBuiltinsDescriptorCold.time_call_builtin_mul_op": {
+        "code": "class PythonBuiltinsDescriptorCold:\n    def time_call_builtin_mul_op(self):\n        # Unlike the single transform_identity() overload, matrix multiplication\n        # rejects many wp.mul overloads before matching, so it stresses the\n        # per-overload cost of building descriptors.\n        mat * mat\n\n    def setup(self):\n        wp.init()\n        get_builtin_call_desc.cache_clear()\n        _unary_builtin_cache.clear()\n        _binary_builtin_cache.clear()\n        _rbinary_builtin_cache.clear()",
+        "min_run_count": 2,
+        "name": "api.python_builtins.PythonBuiltinsDescriptorCold.time_call_builtin_mul_op",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 32,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "f16a9aa16038bd5f476708fa389bab6d6d2418ef5629d67e5d02173cf1c8ff19",
+        "warmup_time": -1
+    },
+    "api.python_builtins.PythonBuiltinsDescriptorCold.time_call_builtin_transform_identity_fn": {
+        "code": "class PythonBuiltinsDescriptorCold:\n    def time_call_builtin_transform_identity_fn(self):\n        wp.transform_identity()\n\n    def setup(self):\n        wp.init()\n        get_builtin_call_desc.cache_clear()\n        _unary_builtin_cache.clear()\n        _binary_builtin_cache.clear()\n        _rbinary_builtin_cache.clear()",
+        "min_run_count": 2,
+        "name": "api.python_builtins.PythonBuiltinsDescriptorCold.time_call_builtin_transform_identity_fn",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 64,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "d21a023570578169f50b90c036ef9de828ebfe4567ca8bd1059332e167b4cc59",
+        "warmup_time": -1
+    },
     "api.struct.StructSetup.time_construct_complex": {
         "code": "class StructSetup:\n    def time_construct_complex(self):\n        \"\"\"\n        Time constructing a complex struct.\n        \"\"\"\n        D()\n\n    def setup(self):\n        wp.init()\n    \n        self._vec = wp.vec3(1, 2, 3)\n        self._mat = wp.mat33(1, 2, 3, 4, 5, 6, 7, 8, 9)\n        self._array = wp.zeros(10, dtype=float, device=\"cpu\")\n        self._array2d = wp.zeros((10, 10), dtype=int, device=\"cpu\")\n    \n        self.a = A()\n        self.d = D()",
         "min_run_count": 2,

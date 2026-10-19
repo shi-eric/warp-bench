@@ -5,10 +5,10 @@
   "last_cycle": "failed",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "no results stored: ea0dcd8b result empty (attempt 1/2)",
+  "problem": "no results stored: ea0dcd8b result empty (attempt 2/2; kept pending until another commit builds)",
   "problem_since": "2026-10-19T15:22:58Z",
   "queue": 0,
-  "updated": "2026-10-19T16:13:16Z",
+  "updated": "2026-10-19T16:18:52Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

@@ -5,10 +5,10 @@
   "last_cycle": "failed",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "no results stored: a91d225d result empty (attempt 1/2)",
+  "problem": "no results stored: a91d225d result empty (attempt 2/2; kept pending until another commit builds)",
   "problem_since": "2026-10-18T21:13:48Z",
   "queue": 0,
-  "updated": "2026-10-19T00:56:21Z",
+  "updated": "2026-10-19T01:01:56Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

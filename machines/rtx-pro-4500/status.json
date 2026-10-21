@@ -5,10 +5,10 @@
   "last_cycle": "failed",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "no results stored: cab41cfd result empty (attempt 2/2; kept pending until another commit builds)",
+  "problem": "no results stored: f5857bc6 result empty (attempt 1/2)",
   "problem_since": "2026-10-21T07:00:47Z",
   "queue": 0,
-  "updated": "2026-10-21T08:48:21Z",
+  "updated": "2026-10-21T08:53:56Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

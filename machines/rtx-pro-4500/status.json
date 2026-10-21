@@ -1,14 +1,14 @@
 {
-  "backfill": 540,
+  "backfill": 539,
   "free_gb": 222.4,
   "fs_errors": 0,
   "last_cycle": "failed",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "no results stored: f2fd7d36 result empty (attempt 2/2; skipped)",
+  "problem": "no results stored: d8ba9815 result empty (attempt 2/2; skipped)",
   "problem_since": "2026-10-21T13:49:58Z",
   "queue": 0,
-  "updated": "2026-10-21T15:02:42Z",
+  "updated": "2026-10-21T15:08:16Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

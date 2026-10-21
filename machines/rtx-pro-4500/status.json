@@ -5,10 +5,10 @@
   "last_cycle": "failed",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "no results stored: b76e1118 result empty (attempt 1/2)",
+  "problem": "no results stored: b76e1118 result empty (attempt 2/2; kept pending until another commit builds)",
   "problem_since": "2026-10-21T00:20:26Z",
   "queue": 0,
-  "updated": "2026-10-21T01:10:34Z",
+  "updated": "2026-10-21T01:23:26Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

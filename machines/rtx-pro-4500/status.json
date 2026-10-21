@@ -5,10 +5,10 @@
   "last_cycle": "failed",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "no results stored: f982c4d3 result empty (attempt 2/2; skipped)",
+  "problem": "no results stored: 32d055fa result empty (attempt 1/2)",
   "problem_since": "2026-10-21T03:46:10Z",
   "queue": 0,
-  "updated": "2026-10-21T04:24:23Z",
+  "updated": "2026-10-21T04:37:01Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

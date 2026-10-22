@@ -1,14 +1,14 @@
 {
   "backfill": 531,
-  "free_gb": 222.2,
+  "free_gb": 222.3,
   "fs_errors": 0,
   "last_cycle": "skipped",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "health during batch: xid=0, xid_app=4, oom=0, fs_errors=0 (application Xid: 1fee6989 attempt 1/2)",
+  "problem": "health during batch: xid=0, xid_app=4, oom=0, fs_errors=0 (application Xid: 1fee6989 attempt 2/2; app Xid; kept pending until another commit stores)",
   "problem_since": "2026-10-22T00:22:17Z",
   "queue": 1,
-  "updated": "2026-10-22T00:22:17Z",
+  "updated": "2026-10-22T01:20:12Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

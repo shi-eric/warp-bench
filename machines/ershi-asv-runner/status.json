@@ -4,10 +4,10 @@
   "last_cycle": "skipped",
   "machine": "ershi-asv-runner",
   "oom": 0,
-  "problem": "health during batch: xid=0, xid_app=8, oom=0, fs_errors=0 (application Xid: 3ebd5473 attempt 1/2)",
+  "problem": "health during batch: xid=0, xid_app=8, oom=0, fs_errors=0 (application Xid); testing 2 suspect(s) one at a time",
   "problem_since": "2026-10-24T04:26:28Z",
   "queue": 2,
-  "updated": "2026-10-24T04:26:28Z",
+  "updated": "2026-10-24T06:41:08Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "12.9",

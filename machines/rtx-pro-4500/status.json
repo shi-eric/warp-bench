@@ -5,10 +5,10 @@
   "last_cycle": "skipped",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "nvidia-persistenced not running; load1 8.95 > 2.0",
+  "problem": "load1 7.04 > 2.0",
   "problem_since": "2026-10-23T23:49:58Z",
   "queue": null,
-  "updated": "2026-10-24T14:41:42Z",
+  "updated": "2026-10-24T15:07:38Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

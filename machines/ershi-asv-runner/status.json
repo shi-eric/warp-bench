@@ -1,13 +1,13 @@
 {
-  "free_gb": 177.7,
+  "free_gb": 177.8,
   "fs_errors": 0,
-  "last_cycle": "skipped",
+  "last_cycle": "idle",
   "machine": "ershi-asv-runner",
   "oom": 0,
-  "problem": "health during batch: xid=0, xid_app=8, oom=0, fs_errors=0 (application Xid: 3ebd5473 attempt 2/2; skipped 3ebd5473 after 2 app-Xid discards)",
-  "problem_since": "2026-10-24T13:18:51Z",
+  "problem": null,
+  "problem_since": null,
   "queue": 0,
-  "updated": "2026-10-24T13:18:51Z",
+  "updated": "2026-10-24T15:34:09Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "12.9",

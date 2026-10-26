@@ -1,5 +1,5 @@
 {
-  "backfill": 256,
+  "backfill": 255,
   "free_gb": 221.9,
   "fs_errors": 0,
   "last_cycle": "ok",
@@ -8,7 +8,7 @@
   "problem": null,
   "problem_since": null,
   "queue": 0,
-  "updated": "2026-10-26T14:36:31Z",
+  "updated": "2026-10-26T15:35:44Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",
@@ -17,5 +17,5 @@
     "python": "3.12.15"
   },
   "xid": 0,
-  "xid_app": 4
+  "xid_app": 0
 }

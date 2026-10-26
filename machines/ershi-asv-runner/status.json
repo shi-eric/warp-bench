@@ -1,6 +1,6 @@
 {
   "backfill": 0,
-  "free_gb": 178.4,
+  "free_gb": 178.3,
   "fs_errors": 0,
   "last_cycle": "ok",
   "machine": "ershi-asv-runner",
@@ -8,7 +8,7 @@
   "problem": null,
   "problem_since": null,
   "queue": 0,
-  "updated": "2026-10-26T06:03:46Z",
+  "updated": "2026-10-26T15:51:43Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "12.9",
@@ -17,5 +17,5 @@
     "python": "3.12.11"
   },
   "xid": 0,
-  "xid_app": 8
+  "xid_app": 0
 }

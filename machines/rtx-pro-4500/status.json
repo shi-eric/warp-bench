@@ -1,14 +1,14 @@
 {
-  "backfill": 475,
-  "free_gb": 222.2,
+  "backfill": 270,
+  "free_gb": 222.1,
   "fs_errors": 0,
-  "last_cycle": "skipped",
+  "last_cycle": "ok",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "health during batch: xid=0, xid_app=4, oom=0, fs_errors=0 (application Xid: 84a08e12 attempt 2/2; skipped 84a08e12 after 3 app-Xid discards)",
-  "problem_since": "2026-10-25T13:05:10Z",
+  "problem": null,
+  "problem_since": null,
   "queue": 0,
-  "updated": "2026-10-25T23:49:33Z",
+  "updated": "2026-10-26T00:47:58Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",
@@ -16,5 +16,6 @@
     "kernel": "6.8.0-147-generic",
     "python": "3.12.15"
   },
-  "xid": 0
+  "xid": 0,
+  "xid_app": 4
 }

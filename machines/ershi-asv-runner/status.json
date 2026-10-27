@@ -7,8 +7,8 @@
   "oom": 0,
   "problem": null,
   "problem_since": null,
-  "queue": 2,
-  "updated": "2026-10-27T10:42:56Z",
+  "queue": 0,
+  "updated": "2026-10-27T14:54:04Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "12.9",

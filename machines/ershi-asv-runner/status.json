@@ -1,14 +1,14 @@
 {
   "backfill": 0,
-  "free_gb": 177.4,
+  "free_gb": 177.3,
   "fs_errors": 0,
-  "last_cycle": "idle",
+  "last_cycle": "ok",
   "machine": "ershi-asv-runner",
   "oom": 0,
   "problem": null,
   "problem_since": null,
   "queue": 0,
-  "updated": "2026-10-28T13:03:49Z",
+  "updated": "2026-10-28T17:30:50Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "12.9",

@@ -1,6 +1,6 @@
 {
-  "backfill": 129,
-  "free_gb": 218.3,
+  "backfill": 128,
+  "free_gb": 218.2,
   "fs_errors": 0,
   "last_cycle": "ok",
   "machine": "rtx-pro-4500",
@@ -8,7 +8,7 @@
   "problem": null,
   "problem_since": null,
   "queue": 0,
-  "updated": "2026-11-01T15:03:42Z",
+  "updated": "2026-11-01T16:01:14Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

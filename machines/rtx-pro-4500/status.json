@@ -1,5 +1,5 @@
 {
-  "backfill": 96,
+  "backfill": 95,
   "free_gb": 216.6,
   "fs_errors": 0,
   "last_cycle": "ok",
@@ -8,7 +8,7 @@
   "problem": null,
   "problem_since": null,
   "queue": 0,
-  "updated": "2026-11-03T09:04:11Z",
+  "updated": "2026-11-03T10:03:33Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

@@ -1127,6 +1127,21 @@
         "version": "c83f1d9ccd1b3d91f0330513670d3c2858e40baca95214e6ccb60b3180d06901",
         "warmup_time": -1
     },
+    "fixedarray.FixedArrayZerosCUDA.time_zeros": {
+        "code": "class FixedArrayZerosCUDA:\n    def time_zeros(self):\n        self.command.launch()\n\n    @setup_once\n    def setup(self):\n        device = wp.get_device(\"cuda:0\")\n        self.output = wp.empty(NUM_THREADS, dtype=float, device=device)\n        self.command = wp.launch(\n            fixedarray_zeros_kernel,\n            dim=NUM_THREADS,\n            outputs=[self.output],\n            device=device,\n            record_cmd=True,\n        )\n        for _ in range(5):\n            self.command.launch()\n    \n        indices = np.arange(NUM_THREADS) % SCRATCH_SIZE\n        expected = ((indices == 0) | (indices == SCRATCH_SIZE - 1)).astype(np.float32)\n        np.testing.assert_array_equal(self.output.numpy(), expected)",
+        "min_run_count": 2,
+        "name": "fixedarray.FixedArrayZerosCUDA.time_zeros",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 8,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "a34a376ecdf821e49424cf9e47bbb622daa67a65131edf91c9b03977e4f5b4a6",
+        "warmup_time": -1
+    },
     "floordiv.SignedFloorDivCPU.time_division": {
         "code": "class SignedFloorDivCPU:\n    def time_division(self, divisor_kind):\n        self.command.launch()\n\n    @setup_once\n    def setup(self, divisor_kind):\n        wp.init()\n        self.device = wp.get_device(\"cpu\")\n    \n        indices = np.arange(CPU_NUM_ELEMENTS, dtype=np.int64)\n        values_np = ((indices * 104729 + 12345) % 200000000 + 1).astype(np.int32)\n        divisors_np = (indices % 97 + 2).astype(np.int32)\n        values_np[1::2] *= -1\n        divisors_np[2::4] *= -1\n        divisors_np[3::4] *= -1\n    \n        self.values = wp.array(values_np, dtype=wp.int32, device=self.device)\n        self.output = wp.empty(CPU_NUM_ELEMENTS, dtype=wp.int32, device=self.device)\n    \n        if divisor_kind == \"runtime\":\n            self.divisors = wp.array(divisors_np, dtype=wp.int32, device=self.device)\n            self.command = wp.launch(\n                floordiv_runtime_kernel,\n                dim=CPU_NUM_ELEMENTS,\n                inputs=[self.values, self.divisors],\n                outputs=[self.output],\n                device=self.device,\n                record_cmd=True,\n            )\n        else:\n            self.command = wp.launch(\n                floordiv_constant_kernel,\n                dim=CPU_NUM_ELEMENTS,\n                inputs=[self.values],\n                outputs=[self.output],\n                device=self.device,\n                record_cmd=True,\n            )\n    \n        for _ in range(5):\n            self.command.launch()",
         "min_run_count": 2,

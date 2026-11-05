@@ -651,8 +651,23 @@
         "version": "150e0785c788aa622b669d26170797e1491add7e2c8b535e68ea3c95cd9386ff",
         "warmup_time": -1
     },
+    "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_helpers": {
+        "code": "class DeclareUniqueModuleKernel:\n    def time_declare_helpers(self):\n        wp.kernel(self._helpers, module=\"unique\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self._small = small_sparse_mv\n        self._medium = medium_bound_project\n        self._large = large_equality_flex\n        self._helpers = helper_calls\n        # Warm linecache and first-module registration so samples reflect the\n        # steady-state per-kernel declaration cost rather than one-time setup.\n        for fn in (self._small, self._medium, self._large, self._helpers):\n            wp.kernel(fn, module=\"unique\")",
+        "min_run_count": 2,
+        "name": "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_helpers",
+        "number": 40,
+        "param_names": [],
+        "params": [],
+        "repeat": 15,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "81b7586bdffd5f1b1ce792265903d71ab829825ddcc0149eb2ed8fb6f319e6d7",
+        "warmup_time": 0.2
+    },
     "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_large": {
-        "code": "class DeclareUniqueModuleKernel:\n    def time_declare_large(self):\n        wp.kernel(self._large, module=\"unique\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self._small = small_sparse_mv\n        self._medium = medium_bound_project\n        self._large = large_equality_flex\n        # Warm linecache and first-module registration so samples reflect the\n        # steady-state per-kernel declaration cost rather than one-time setup.\n        for fn in (self._small, self._medium, self._large):\n            wp.kernel(fn, module=\"unique\")",
+        "code": "class DeclareUniqueModuleKernel:\n    def time_declare_large(self):\n        wp.kernel(self._large, module=\"unique\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self._small = small_sparse_mv\n        self._medium = medium_bound_project\n        self._large = large_equality_flex\n        self._helpers = helper_calls\n        # Warm linecache and first-module registration so samples reflect the\n        # steady-state per-kernel declaration cost rather than one-time setup.\n        for fn in (self._small, self._medium, self._large, self._helpers):\n            wp.kernel(fn, module=\"unique\")",
         "min_run_count": 2,
         "name": "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_large",
         "number": 40,
@@ -663,11 +678,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "cb1bc9857b0d20672fb48c1b638a07a575c7cc08cb15a905b8f6fcc54494e627",
+        "version": "2bd58e87c1fc6951b36bdc7e0d3914f2afbad4eaa92801ea15b9dd965edfbaef",
         "warmup_time": 0.2
     },
     "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_medium": {
-        "code": "class DeclareUniqueModuleKernel:\n    def time_declare_medium(self):\n        wp.kernel(self._medium, module=\"unique\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self._small = small_sparse_mv\n        self._medium = medium_bound_project\n        self._large = large_equality_flex\n        # Warm linecache and first-module registration so samples reflect the\n        # steady-state per-kernel declaration cost rather than one-time setup.\n        for fn in (self._small, self._medium, self._large):\n            wp.kernel(fn, module=\"unique\")",
+        "code": "class DeclareUniqueModuleKernel:\n    def time_declare_medium(self):\n        wp.kernel(self._medium, module=\"unique\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self._small = small_sparse_mv\n        self._medium = medium_bound_project\n        self._large = large_equality_flex\n        self._helpers = helper_calls\n        # Warm linecache and first-module registration so samples reflect the\n        # steady-state per-kernel declaration cost rather than one-time setup.\n        for fn in (self._small, self._medium, self._large, self._helpers):\n            wp.kernel(fn, module=\"unique\")",
         "min_run_count": 2,
         "name": "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_medium",
         "number": 40,
@@ -678,11 +693,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "95cb6d1d580b092313147bb5dc75aff1658627960c1c3d3b7c84786615d2f5c1",
+        "version": "034667eede38dfe7252258f5ca3887c330da82b641889060e9ab122f1befbd2f",
         "warmup_time": 0.2
     },
     "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_small": {
-        "code": "class DeclareUniqueModuleKernel:\n    def time_declare_small(self):\n        wp.kernel(self._small, module=\"unique\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self._small = small_sparse_mv\n        self._medium = medium_bound_project\n        self._large = large_equality_flex\n        # Warm linecache and first-module registration so samples reflect the\n        # steady-state per-kernel declaration cost rather than one-time setup.\n        for fn in (self._small, self._medium, self._large):\n            wp.kernel(fn, module=\"unique\")",
+        "code": "class DeclareUniqueModuleKernel:\n    def time_declare_small(self):\n        wp.kernel(self._small, module=\"unique\")\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self._small = small_sparse_mv\n        self._medium = medium_bound_project\n        self._large = large_equality_flex\n        self._helpers = helper_calls\n        # Warm linecache and first-module registration so samples reflect the\n        # steady-state per-kernel declaration cost rather than one-time setup.\n        for fn in (self._small, self._medium, self._large, self._helpers):\n            wp.kernel(fn, module=\"unique\")",
         "min_run_count": 2,
         "name": "codegen.kernel_declaration.DeclareUniqueModuleKernel.time_declare_small",
         "number": 40,
@@ -693,7 +708,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "253eb7f6e4e8cec96333da69aa183db16f8159d2f6a70e6ed923d81cb47ce198",
+        "version": "2c3be5d53fdf8daae0338881d714b244827db1a43984cc00fc9483fabdc78f44",
         "warmup_time": 0.2
     },
     "codegen.mat22_augassign.CompileModule.time_cuda_codegen": {

@@ -1,14 +1,14 @@
 {
   "backfill": null,
-  "free_gb": 207.3,
+  "free_gb": 207.2,
   "fs_errors": 0,
   "last_cycle": "skipped",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "foreign GPU process pid 3667413 (/home/horde/.cache/uv/builds-v0/.tmp1LCOiL/bin/python)",
+  "problem": "foreign GPU process pid 3668495 (/home/horde/.cache/uv/builds-v0/.tmpkRfymD/bin/python)",
   "problem_since": "2026-11-07T19:47:37Z",
   "queue": null,
-  "updated": "2026-11-07T19:47:37Z",
+  "updated": "2026-11-07T19:52:44Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

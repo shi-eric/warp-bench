@@ -711,6 +711,78 @@
         "version": "2c3be5d53fdf8daae0338881d714b244827db1a43984cc00fc9483fabdc78f44",
         "warmup_time": 0.2
     },
+    "codegen.local_attribute_augassign.CompileModule.time_compile": {
+        "code": "class CompileModule:\n    def time_compile(self, device, aggregate):\n        wp.load_module(module=self.module, device=device)\n\n    def setup(self, device, aggregate):\n        self._cache_kernels = wp.config.cache_kernels\n        wp.config.cache_kernels = False\n        self._initialize(device, aggregate)\n        self.module.unload()",
+        "min_run_count": 2,
+        "name": "codegen.local_attribute_augassign.CompileModule.time_compile",
+        "number": 1,
+        "param_names": [
+            "device",
+            "aggregate"
+        ],
+        "params": [
+            [
+                "'cpu'",
+                "'cuda:0'"
+            ],
+            [
+                "'vec3'",
+                "'transform'"
+            ]
+        ],
+        "repeat": 4,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "4e1069c039bc634a312018fd7a4a1d01b8e33ce543bc2f92a43d398383736043",
+        "warmup_time": -1
+    },
+    "codegen.local_attribute_augassign.RunBackwardCPU.time_translation": {
+        "code": "class RunBackwardCPU:\n    def time_translation(self):\n        # Only gradients accumulate; primal inputs and the seeded output stay\n        # unchanged. CPU launches complete synchronously.\n        self.command.launch()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        n = 1 << 15\n        self.a = wp.ones(n, dtype=wp.transform, device=\"cpu\", requires_grad=True)\n        self.b = wp.full(n, 0.001, dtype=float, device=\"cpu\", requires_grad=True)\n        # Each adjoint must see the same nonzero seed, including after warmup.\n        self.out = wp.zeros_like(self.a, retain_grad=True)\n        wp.launch(translation_loop, n, inputs=[self.a, self.b], outputs=[self.out], device=\"cpu\")\n        self.out.grad.fill_(1.0)\n        self.command = wp.launch(\n            translation_loop,\n            n,\n            inputs=[self.a, self.b],\n            outputs=[self.out],\n            adj_inputs=[self.a.grad, self.b.grad],\n            adj_outputs=[self.out.grad],\n            adjoint=True,\n            device=\"cpu\",\n            record_cmd=True,\n        )",
+        "min_run_count": 2,
+        "name": "codegen.local_attribute_augassign.RunBackwardCPU.time_translation",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 4,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "61d7f9361e84b34997d6ff81a02c901eb2dceb78b053c1d5f9c4e6aa9732f957",
+        "warmup_time": -1
+    },
+    "codegen.local_attribute_augassign.RunBackwardCUDA.time_translation": {
+        "code": "class RunBackwardCUDA:\n    def time_translation(self):\n        wp.capture_launch(self.graph)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        n = 1 << 18\n        self.a = wp.ones(n, dtype=wp.transform, device=\"cuda:0\", requires_grad=True)\n        self.b = wp.full(n, 0.001, dtype=float, device=\"cuda:0\", requires_grad=True)\n        self.out = wp.zeros_like(self.a, retain_grad=True)\n        wp.launch(translation_loop, n, inputs=[self.a, self.b], outputs=[self.out], device=\"cuda:0\")\n        self.out.grad.fill_(1.0)\n        self.command = wp.launch(\n            translation_loop,\n            n,\n            inputs=[self.a, self.b],\n            outputs=[self.out],\n            adj_inputs=[self.a.grad, self.b.grad],\n            adj_outputs=[self.out.grad],\n            adjoint=True,\n            device=\"cuda:0\",\n            record_cmd=True,\n        )\n        self.graph = capture_launches(self.command.launch, self.launches_per_sample)\n        wp.capture_launch(self.graph)\n        wp.synchronize_device(\"cuda:0\")",
+        "min_run_count": 2,
+        "name": "codegen.local_attribute_augassign.RunBackwardCUDA.time_translation",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 4,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "db017a65935e456459f83228f7e1d888efe44b00cc922fa8f7030ab65c2b96e4",
+        "warmup_time": -1
+    },
+    "codegen.local_attribute_augassign.RunWideBackwardCPU.time_vector": {
+        "code": "class RunWideBackwardCPU:\n    def time_vector(self):\n        self.command.launch()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        n = 1 << 15\n        self.a = wp.ones(n, dtype=vec32, device=\"cpu\", requires_grad=True)\n        self.b = wp.full(n, 0.001, dtype=float, device=\"cpu\", requires_grad=True)\n        self.out = wp.zeros_like(self.a, retain_grad=True)\n        wp.launch(wide_vector_loop, n, inputs=[self.a, self.b], outputs=[self.out], device=\"cpu\")\n        self.out.grad.fill_(1.0)\n        self.command = wp.launch(\n            wide_vector_loop,\n            n,\n            inputs=[self.a, self.b],\n            outputs=[self.out],\n            adj_inputs=[self.a.grad, self.b.grad],\n            adj_outputs=[self.out.grad],\n            adjoint=True,\n            device=\"cpu\",\n            record_cmd=True,\n        )",
+        "min_run_count": 2,
+        "name": "codegen.local_attribute_augassign.RunWideBackwardCPU.time_vector",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 4,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "0e57c06e09221f728308d0052a79e2cbad0567984a7c063ad69850a7bd810e50",
+        "warmup_time": -1
+    },
     "codegen.mat22_augassign.CompileModule.time_cuda_codegen": {
         "code": "class CompileModule:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()",
         "min_run_count": 2,
@@ -800,6 +872,22 @@
         "unit": "seconds",
         "version": "dc9e38c97e9df44eb757a268b4d36f6a5540b50fdb8d03e810f97d30326899ba",
         "warmup_time": -1
+    },
+    "compile_conditional.CompileNestedSearch.timeraw_cuda": {
+        "code": "class CompileNestedSearch:\n    def timeraw_cuda(self):\n        # ASV runs each sample in a fresh process. Keep initialization outside\n        # timing, disable NVRTC's own cache before CUDA initializes, and avoid\n        # clearing the kernel cache shared by other benchmarks.\n        return (\n            \"wp.load_module(module=nested_search.module, device='cuda:0')\",\n            f\"\"\"\n            import os\n            import sys\n            from tempfile import TemporaryDirectory\n    \n            os.environ[\"CUDA_CACHE_DISABLE\"] = \"1\"\n            sys.path.insert(0, {str(Path(__file__).resolve().parent)!r})\n    \n            import warp as wp\n    \n            wp.config.log_level = wp.LOG_WARNING\n            cache = TemporaryDirectory(prefix=\"warp-asv-compile-\")\n            wp.config.kernel_cache_dir = cache.name\n            wp.config.use_precompiled_headers = False\n            wp.config.cuda_output = \"cubin\"\n            wp.config.mode = \"release\"\n            wp.init()\n    \n            from compile_conditional import nested_search\n            \"\"\",\n        )",
+        "min_run_count": 2,
+        "name": "compile_conditional.CompileNestedSearch.timeraw_cuda",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 4,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "timeout": 120,
+        "type": "time",
+        "unit": "seconds",
+        "version": "4b786c5f44359754c2ceae35b71c7c99a495b891849048a8a03c504b7740ab4c",
+        "warmup_time": 0
     },
     "control_flow.DivergentLoopCUDA.time_loop": {
         "code": "class DivergentLoopCUDA:\n    def time_loop(self):\n        \"\"\"Time a batch of completed loop kernels while amortizing host launch jitter.\"\"\"\n        wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        \"\"\"Compile, validate both update paths, and capture reusable launches.\"\"\"\n        self.device = wp.get_device(\"cuda:0\")\n        table = np.random.default_rng(42).integers(0, TABLE_SIZE, TABLE_SIZE, dtype=np.int32)\n        self.table = wp.array(table, dtype=wp.int32, device=self.device)\n        self.output = wp.empty(NUM_THREADS, dtype=wp.float32, device=self.device)\n        self.command = wp.launch(\n            divergent_loop,\n            dim=NUM_THREADS,\n            inputs=[self.table, NUM_STEPS],  # Pass the trip count as a runtime argument.\n            outputs=[self.output],\n            device=self.device,\n            record_cmd=True,\n        )\n    \n        # All paths depend only on the low index bits, so one table period\n        # suffices for an independent NumPy reference for every output thread.\n        threads = np.arange(TABLE_SIZE, dtype=np.int32)\n        index = threads.copy()\n        value = np.zeros(TABLE_SIZE, dtype=np.float32)\n        active = np.ones(TABLE_SIZE, dtype=bool)\n        for _ in range(NUM_STEPS):\n            index = np.where(active, table[index], table[(index + threads) & (TABLE_SIZE - 1)])\n            value = np.where(active, value + (index & 255).astype(np.float32), value * np.float32(0.125))\n            active = np.where(active, (index & 1) == 0, (index & 1) != 0)\n        for _ in range(3):\n            self.command.launch()\n        np.testing.assert_array_equal(self.output.numpy(), np.tile(value, NUM_THREADS // TABLE_SIZE))\n    \n        with wp.ScopedCapture(device=self.device) as capture:\n            for _ in range(LAUNCHES_PER_GRAPH):\n                self.command.launch()\n        self.graph = capture.graph\n        wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)",

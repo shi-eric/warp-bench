@@ -5,10 +5,10 @@
   "last_cycle": "skipped",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "foreign GPU process pid 232042 (./cublas_bench)",
+  "problem": "foreign GPU process pid 234085 (./build-dx-sm120a/16_dgemm_emulation/dgemm_emulation)",
   "problem_since": "2026-11-09T00:16:20Z",
   "queue": null,
-  "updated": "2026-11-09T00:26:32Z",
+  "updated": "2026-11-09T00:31:39Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

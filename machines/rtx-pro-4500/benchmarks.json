@@ -1361,6 +1361,51 @@
         "unit": "bytes",
         "version": "a8448562e7b2c8b003320baada82ec6f7285db7fbf571608ee67e2e1336fa0d7"
     },
+    "optim.linear.LinearSolverCg.time_solve": {
+        "code": "class LinearSolverCg:\n    def time_solve(self, mode):\n        self._solve()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, mode):\n        wp.init()\n        self.device = _get_device(\"cuda\" if mode == \"cuda\" else \"cpu\")\n        self.use_cuda_graph = True if mode == \"cpu_graph\" else None\n    \n        self.A = _laplacian_2d(LAPLACIAN_RES, self.device)\n        self.M = preconditioner(self.A, \"diag\")\n        rhs = np.random.default_rng(42).standard_normal(self.A.shape[0]).astype(np.float32)\n        self.b = wp.array(rhs, device=self.device)\n        self.x = wp.zeros_like(self.b)\n    \n        iterations, residual_norm, _ = self._solve()\n        if iterations != CG_ITERATIONS or not residual_norm < 1.0e-2 * np.linalg.norm(rhs):\n            raise RuntimeError(f\"unexpected CG result: {iterations} iterations, residual norm {residual_norm}\")",
+        "min_run_count": 2,
+        "name": "optim.linear.LinearSolverCg.time_solve",
+        "number": 0,
+        "param_names": [
+            "mode"
+        ],
+        "params": [
+            [
+                "'cpu'",
+                "'cpu_graph'",
+                "'cuda'"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "d803bad519a894878272dd73f59c4388804fbeb912f6d3544085090206c59e26",
+        "warmup_time": -1
+    },
+    "optim.linear.LinearSolverDot.time_compute": {
+        "code": "class LinearSolverDot:\n    def time_compute(self, device_name):\n        self.dot.compute(self.a, self.a)\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, device_name):\n        wp.init()\n        self.device = _get_device(device_name)\n    \n        values = np.random.default_rng(42).standard_normal(DOT_LENGTH).astype(np.float32)\n        self.a = wp.array(values, device=self.device)\n        self.dot = TiledDot(DOT_LENGTH, wp.float32, device=self.device)\n    \n        self.dot.compute(self.a, self.a)\n        expected = np.dot(values.astype(np.float64), values.astype(np.float64))\n        np.testing.assert_allclose(self.dot.col().numpy()[0], expected, rtol=1.0e-4)",
+        "min_run_count": 2,
+        "name": "optim.linear.LinearSolverDot.time_compute",
+        "number": 0,
+        "param_names": [
+            "device"
+        ],
+        "params": [
+            [
+                "'cpu'",
+                "'cuda'"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "2234ab333224af92ec7881111ef50ed09c8c800641e129e8c1e2f97e6d84fede",
+        "warmup_time": -1
+    },
     "sparse.matrix_matrix.BsrMMDeepDense.time_cuda": {
         "code": "class BsrMMDeepDense:\n    def time_cuda(self):\n        self.run()\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        res = 1\n        n_qp = 6000\n    \n        with wp.ScopedDevice(self.device):\n            geo = fem.Grid3D(res=(res, res, res))\n            space = fem.make_polynomial_space(geo, degree=3, dtype=wp.vec3)\n    \n            rng = np.random.default_rng(42)\n            qps = wp.array(rng.random((1, n_qp, 3), dtype=np.float32), dtype=wp.vec3)\n            weights = wp.full((1, n_qp), value=1.0 / n_qp, dtype=wp.float32)\n    \n            quadrature = fem.ExplicitQuadrature(fem.Cells(geo), points=qps, weights=weights)\n    \n            self.build_system(space, quadrature=quadrature, block_shape=(9, 12))",
         "min_run_count": 2,

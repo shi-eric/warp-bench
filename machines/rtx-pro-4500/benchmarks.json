@@ -2456,6 +2456,40 @@
         "version": "1c502174d168d3fd25a6cfbb78fd110791ca7a1608d845017a9c5313dc7d7f19",
         "warmup_time": -1
     },
+    "tile.lu.TileLU.time_cuda": {
+        "code": "class TileLU:\n    def time_cuda(self, workload, precision, mathdx):\n        wp.capture_launch(self.graph)\n\n    @setup_once\n    def setup(self, workload, precision, mathdx):\n        wp.init()\n        if \"tile_lu\" not in builtin_functions:\n            raise NotImplementedError(\"Requires wp.tile_lu\")\n        if not wp.is_cuda_available():\n            raise NotImplementedError(\"Requires CUDA\")\n        if mathdx and not wp._src.context.runtime.core.wp_is_mathdx_enabled():\n            raise NotImplementedError(\"Requires MathDx\")\n        n, batches = WORKLOADS[workload]\n        self.device = wp.get_device(\"cuda:0\")\n        dtype = getattr(wp, precision)\n        rng = np.random.default_rng(42)\n        a = wp.array(rng.standard_normal((batches, n, n)), dtype=dtype, device=self.device)\n        lu = wp.empty_like(a)\n        p = wp.empty((batches, n), dtype=wp.int32, device=self.device)\n        info = wp.empty((batches, 1), dtype=wp.int32, device=self.device)\n        self.cmd = wp.launch_tiled(\n            make_lu_kernel(n, dtype, mathdx),\n            dim=batches,\n            inputs=[a, lu, p, info],\n            block_dim=128,\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n        self.graph = capture_launches(self.cmd.launch, LAUNCHES_PER_SAMPLE, self.device)",
+        "min_run_count": 2,
+        "name": "tile.lu.TileLU.time_cuda",
+        "number": 0,
+        "param_names": [
+            "workload",
+            "precision",
+            "mathdx"
+        ],
+        "params": [
+            [
+                "'8x1'",
+                "'8x4096'",
+                "'32x256'",
+                "'64x1'"
+            ],
+            [
+                "'float32'",
+                "'float64'"
+            ],
+            [
+                "False",
+                "True"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "1699b16443a354941dfcad7fa7dc8dde051d675387c4d90dfd8b3da1de385d6e",
+        "warmup_time": -1
+    },
     "tile.tile_alloc_shared.TileEmptySharedStore.time_cuda": {
         "code": "class TileEmptySharedStore:\n    def time_cuda(self, tile_dim):\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, tile_dim):\n        wp.init()\n        # Skip on commits where wp.tile_empty isn't registered yet (e.g.,\n        # asv continuous comparing against a base ref that predates this MR).\n        # Becomes inert after this MR merges; can be removed at that point.\n        from warp._src.context import builtin_functions  # noqa: PLC0415\n    \n        if \"tile_empty\" not in builtin_functions:\n            raise NotImplementedError(\"wp.tile_empty is not available in this Warp build\")\n        wp.set_module_options({\"fast_math\": True, \"enable_backward\": False})\n        self.device = wp.get_device(\"cuda:0\")\n        wp.load_module(device=self.device)\n    \n        kernel = _create_empty_kernel(tile_dim)\n        grid_dim = _OUTPUT_EDGE // tile_dim\n        self.out = wp.empty((_OUTPUT_EDGE, _OUTPUT_EDGE), dtype=wp.float32, device=self.device)\n    \n        self.cmd = wp.launch_tiled(\n            kernel,\n            dim=(grid_dim, grid_dim),\n            inputs=[],\n            outputs=[self.out],\n            block_dim=_BLOCK_DIM,\n            device=self.device,\n            record_cmd=True,\n        )\n        self.cmd.launch()\n        wp.synchronize_device(self.device)",
         "min_run_count": 2,
@@ -2530,5 +2564,20 @@
         "version": "5607fa3b7d8dc3882f6545c8d2d56c30200c2d258ecb4c4d5eddd6fd130ceb25",
         "warmup_time": -1
     },
-    "version": 2
+    "version": 2,
+    "volume_build.VolumeAllocateByVoxelsCPU.time_allocate": {
+        "code": "class VolumeAllocateByVoxelsCPU:\n    def time_allocate(self):\n        wp.Volume.allocate_by_voxels(self.points, voxel_size=VOXEL_SIZE, device=self.device)\n\n    @setup_once\n    def setup(self):\n        wp.init()\n        self.device = wp.get_device(\"cpu\")\n    \n        rng = np.random.default_rng(42)\n        half_extent = 0.5 * VOXEL_SIZE * (NUM_POINTS / POINTS_PER_VOXEL) ** (1.0 / 3.0)\n        points_np = rng.uniform(-half_extent, half_extent, size=(NUM_POINTS, 3)).astype(np.float32)\n        self.points = wp.array(points_np, dtype=wp.vec3, device=self.device)\n    \n        for _ in range(2):\n            self.time_allocate()",
+        "min_run_count": 2,
+        "name": "volume_build.VolumeAllocateByVoxelsCPU.time_allocate",
+        "number": 1,
+        "param_names": [],
+        "params": [],
+        "repeat": 15,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "017de8e3535f5c302f007dcd55130764a40f6f7520f4e75c64f61e71d3a101b1",
+        "warmup_time": -1
+    }
 }

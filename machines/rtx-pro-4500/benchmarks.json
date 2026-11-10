@@ -2157,6 +2157,40 @@
         "version": "ed45764951a9b321a463a402f8dfc260304163ed973d86e05b3d80dd982fc0e4",
         "warmup_time": -1
     },
+    "tile.cholesky.TileCholesky.time_cuda": {
+        "code": "class TileCholesky:\n    def time_cuda(self, workload, precision, mathdx):\n        wp.capture_launch(self.graph)\n\n    @setup_once\n    def setup(self, workload, precision, mathdx):\n        n, batches, block_dim = workload\n        wp.init()\n        if not wp.is_cuda_available():\n            raise NotImplementedError(\"Requires CUDA\")\n        if mathdx and not wp._src.context.runtime.core.wp_is_mathdx_enabled():\n            raise NotImplementedError(\"Requires MathDx\")\n        self.device = wp.get_device(\"cuda:0\")\n        dtype = getattr(wp, precision)\n        rng = np.random.default_rng(42)\n        normal = rng.standard_normal((batches, n, n))\n        matrices = wp.array(normal @ normal.transpose(0, 2, 1) / n + 0.1 * np.eye(n), dtype=dtype, device=self.device)\n        factors = wp.empty_like(matrices)\n        self.command = wp.launch_tiled(\n            make_cholesky_kernel(n, dtype, mathdx),\n            dim=batches,\n            inputs=[matrices, factors],\n            block_dim=block_dim,\n            device=self.device,\n            record_cmd=True,\n        )\n        self.command.launch()\n        self.graph = capture_launches(self.command.launch, LAUNCHES_PER_SAMPLE, self.device)",
+        "min_run_count": 2,
+        "name": "tile.cholesky.TileCholesky.time_cuda",
+        "number": 0,
+        "param_names": [
+            "workload",
+            "precision",
+            "mathdx"
+        ],
+        "params": [
+            [
+                "(8, 1, 32)",
+                "(8, 4096, 128)",
+                "(32, 256, 256)",
+                "(64, 1, 64)"
+            ],
+            [
+                "'float32'",
+                "'float64'"
+            ],
+            [
+                "False",
+                "True"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "461970ae15df4bd8d3758c986befc54be50da4f3afcb8a9f4064eff45995c3bc",
+        "warmup_time": -1
+    },
     "tile.compile_cholesky.ColdCompileCholeskyLTO.time_cuda_codegen": {
         "code": "class ColdCompileCholeskyLTO:\n    def time_cuda_codegen(self):\n        wp.load_module(device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        clear_kernel_cache()\n        wp.clear_lto_cache()",
         "min_run_count": 2,

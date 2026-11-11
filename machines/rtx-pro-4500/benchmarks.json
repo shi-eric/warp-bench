@@ -381,6 +381,60 @@
         "version": "32067573958e0020690c6e8bfc00a0d81f09d5e98d60cdf8d3bd6e45facb92f8",
         "warmup_time": -1
     },
+    "array_fill.NonContiguousFillCPU.time_fill": {
+        "code": "class NonContiguousFillCPU:\n    def time_fill(self, layout, num_elements):\n        self.target.fill_(1.0)\n\n    @setup_once\n    def setup(self, layout, num_elements):\n        wp.init()\n        self.target = make_fill_target(layout, num_elements, wp.get_device(\"cpu\"))\n    \n        for _ in range(5):\n            self.target.fill_(1.0)",
+        "min_run_count": 2,
+        "name": "array_fill.NonContiguousFillCPU.time_fill",
+        "number": 50,
+        "param_names": [
+            "layout",
+            "num_elements"
+        ],
+        "params": [
+            [
+                "'strided'",
+                "'indexed'"
+            ],
+            [
+                "4096",
+                "1048576"
+            ]
+        ],
+        "repeat": 15,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "509f258b54859463cec90ad1ff7e18ff678178f085f12e6e4635955a9846b826",
+        "warmup_time": -1
+    },
+    "array_fill.NonContiguousFillCUDA.time_fill": {
+        "code": "class NonContiguousFillCUDA:\n    def time_fill(self, layout, num_elements):\n        self.target.fill_(1.0)\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, layout, num_elements):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n        self.target = make_fill_target(layout, num_elements, self.device)\n    \n        for _ in range(5):\n            self.target.fill_(1.0)\n        wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "array_fill.NonContiguousFillCUDA.time_fill",
+        "number": 50,
+        "param_names": [
+            "layout",
+            "num_elements"
+        ],
+        "params": [
+            [
+                "'strided'",
+                "'indexed'"
+            ],
+            [
+                "4096",
+                "1048576"
+            ]
+        ],
+        "repeat": 31,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "c5599bd6962dc6f82c8163516c4416af97139944f69bc5b9ac2f7f43f6ae0f94",
+        "warmup_time": -1
+    },
     "atomics.AtomicMax.time_cuda": {
         "code": "class AtomicMax:\n    def time_cuda(self, vals_np_dict, dtype_str):\n        self.out.fill_(self.init_value)\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    def setup(self, vals_np_dict, dtype_str):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        dtype = DTYPE_MAP[dtype_str]\n    \n        self.init_value = MAX_INIT[dtype_str]\n        self.vals, self.out, self.cmd = _get_launch(\n            max_kernel, vals_np_dict[dtype_str], dtype, self.device, self.init_value\n        )\n\n    def setup_cache(self):\n        rng = np.random.default_rng(42)\n        # Generate vals_np for each dtype in DTYPE_MAP\n        vals_np_dict = {}\n        for dtype_str_key, dtype in DTYPE_MAP.items():\n            if dtype == wp.float32:\n                vals_np = rng.random(self.num_elements).astype(np.float32)\n            elif dtype == wp.int32:\n                vals_np = rng.integers(0, 2**31 - 1, size=self.num_elements, dtype=np.int32)\n            else:\n                vals_np = None\n            vals_np_dict[dtype_str_key] = vals_np\n    \n        return vals_np_dict",
         "min_run_count": 2,

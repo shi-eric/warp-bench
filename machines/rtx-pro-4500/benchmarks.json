@@ -29,6 +29,70 @@
         "version": "a34a563874c35162ad5f34c9efc862c0fea81dd41711dfdf2802c1b3ba63b456",
         "warmup_time": -1
     },
+    "api.array.ArrayFromList.time_array_from_list": {
+        "code": "class ArrayFromList:\n    def time_array_from_list(self, kind):\n        self.alloc = wp.array(self.data, dtype=self.dtype, device=\"cpu\")\n\n    @setup_once\n    def setup(self, kind):\n        wp.init()\n        self.data, self.dtype = _make_sequence(kind, 100_000)\n        self.alloc = None",
+        "min_run_count": 2,
+        "name": "api.array.ArrayFromList.time_array_from_list",
+        "number": 1,
+        "param_names": [
+            "kind"
+        ],
+        "params": [
+            [
+                "'floats'",
+                "'tuples'",
+                "'named tuples'",
+                "'vec3f'",
+                "'vec3h'",
+                "'mat33f'",
+                "'NumPy 3x3 arrays'",
+                "'nested vec3f'",
+                "'vec3f custom sequence'"
+            ]
+        ],
+        "repeat": 15,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "00edffa2345ab6c89816959377e0edcd5f752d96413bc483949c974c0633d6db",
+        "warmup_time": -1
+    },
+    "api.array.ArrayFromListMemory.peakmem_array_from_vec3f_list": {
+        "code": "class ArrayFromListMemory:\n    def peakmem_array_from_vec3f_list(self):\n        wp.array(self.data, dtype=self.dtype, device=\"cpu\")\n\n    def setup(self):\n        wp.init()\n        self.data, self.dtype = _make_sequence(\"vec3f\", 1_000_000)",
+        "name": "api.array.ArrayFromListMemory.peakmem_array_from_vec3f_list",
+        "param_names": [],
+        "params": [],
+        "type": "peakmemory",
+        "unit": "bytes",
+        "version": "b02a9ee6aab8e38fed99dcb3f1b6ca027993b38ab18b6c3a39c7343df0412855"
+    },
+    "api.array.ArrayFromShortList.time_array_from_short_list": {
+        "code": "class ArrayFromShortList:\n    def time_array_from_short_list(self, kind):\n        self.alloc = wp.array(self.data, dtype=self.dtype, device=\"cpu\")\n\n    @setup_once\n    def setup(self, kind):\n        wp.init()\n        if kind == \"3 floats\":\n            self.data, self.dtype = [1.0, 2.0, 3.0], wp.float32\n        elif kind == \"4 tuples\":\n            self.data, self.dtype = [(1.0, 2.0, 3.0)] * 4, wp.vec3\n        elif kind == \"1 vec3f\":\n            self.data, self.dtype = [wp.vec3f(1.0, 2.0, 3.0)], wp.vec3f\n        elif kind == \"4 vec3f\":\n            self.data, self.dtype = [wp.vec3f(1.0, 2.0, 3.0)] * 4, wp.vec3f\n        elif kind == \"2x2 nested vec3f\":\n            self.data, self.dtype = [[wp.vec3f(1.0, 2.0, 3.0)] * 2] * 2, wp.vec3f\n        else:\n            self.data, self.dtype = np.ones((4, 3), dtype=np.float32), wp.vec3f\n        self.alloc = None",
+        "min_run_count": 2,
+        "name": "api.array.ArrayFromShortList.time_array_from_short_list",
+        "number": 128,
+        "param_names": [
+            "kind"
+        ],
+        "params": [
+            [
+                "'3 floats'",
+                "'4 tuples'",
+                "'1 vec3f'",
+                "'4 vec3f'",
+                "'2x2 nested vec3f'",
+                "'4x3 NumPy array'"
+            ]
+        ],
+        "repeat": 31,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "d45560e1fe560445d7c5f9437c383a77e2f25fdd6f4d7fb9bc1fcb95232ef3d0",
+        "warmup_time": -1
+    },
     "api.array.ArrayZeros.time_zeros": {
         "code": "class ArrayZeros:\n    def time_zeros(self):\n        self.alloc = wp.zeros(N, dtype=float, device=\"cuda:0\")\n\n    def setup(self):\n        wp.init()\n        self.alloc = None\n        gc.disable()",
         "min_run_count": 2,

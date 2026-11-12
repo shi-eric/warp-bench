@@ -1,14 +1,19 @@
 {
   "backfill": 0,
-  "free_gb": 206.1,
+  "free_gb": 205.1,
   "fs_errors": 0,
+  "gapfill": {
+    "commits": 582,
+    "gaps": 25615,
+    "given_up": 0
+  },
   "last_cycle": "ok",
   "machine": "rtx-pro-4500",
   "oom": 0,
   "problem": null,
   "problem_since": null,
   "queue": 0,
-  "updated": "2026-11-12T14:19:48Z",
+  "updated": "2026-11-12T22:52:09Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",
@@ -17,5 +22,5 @@
     "python": "3.12.15"
   },
   "xid": 0,
-  "xid_app": 0
+  "xid_app": 4
 }

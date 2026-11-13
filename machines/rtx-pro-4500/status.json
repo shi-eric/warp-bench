@@ -3,8 +3,8 @@
   "free_gb": 205.0,
   "fs_errors": 0,
   "gapfill": {
-    "commits": 564,
-    "gaps": 24582,
+    "commits": 560,
+    "gaps": 24362,
     "given_up": 0
   },
   "last_cycle": "ok",
@@ -13,7 +13,7 @@
   "problem": null,
   "problem_since": null,
   "queue": 0,
-  "updated": "2026-11-13T12:05:12Z",
+  "updated": "2026-11-13T13:15:03Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

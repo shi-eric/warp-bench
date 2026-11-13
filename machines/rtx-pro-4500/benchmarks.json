@@ -1348,19 +1348,37 @@
         "version": "c83f1d9ccd1b3d91f0330513670d3c2858e40baca95214e6ccb60b3180d06901",
         "warmup_time": -1
     },
-    "fixedarray.FixedArrayZerosCUDA.time_zeros": {
-        "code": "class FixedArrayZerosCUDA:\n    def time_zeros(self):\n        self.command.launch()\n\n    @setup_once\n    def setup(self):\n        device = wp.get_device(\"cuda:0\")\n        self.output = wp.empty(NUM_THREADS, dtype=float, device=device)\n        self.command = wp.launch(\n            fixedarray_zeros_kernel,\n            dim=NUM_THREADS,\n            outputs=[self.output],\n            device=device,\n            record_cmd=True,\n        )\n        for _ in range(5):\n            self.command.launch()\n    \n        indices = np.arange(NUM_THREADS) % SCRATCH_SIZE\n        expected = ((indices == 0) | (indices == SCRATCH_SIZE - 1)).astype(np.float32)\n        np.testing.assert_array_equal(self.output.numpy(), expected)",
+    "fixedarray.FixedArrayCUDA.time_cuda": {
+        "code": "class FixedArrayCUDA:\n    def time_cuda(self, alloc, size, access):\n        self.command.launch()\n\n    @setup_once\n    def setup(self, alloc, size, access):\n        if alloc not in wp._src.context.builtin_functions:\n            raise NotImplementedError(f\"the wp.{alloc}() built-in is not available in this Warp version\")\n    \n        device = wp.get_device(\"cuda:0\")\n        kernel = _KERNEL_FACTORIES[alloc](size)[access]\n        self.output = wp.empty(NUM_THREADS, dtype=float, device=device)\n        self.command = wp.launch(\n            kernel,\n            dim=NUM_THREADS,\n            outputs=[self.output],\n            device=device,\n            record_cmd=True,\n        )\n        for _ in range(5):\n            self.command.launch()\n    \n        np.testing.assert_array_equal(self.output.numpy(), _expected_output(size, access))",
         "min_run_count": 2,
-        "name": "fixedarray.FixedArrayZerosCUDA.time_zeros",
+        "name": "fixedarray.FixedArrayCUDA.time_cuda",
         "number": 1,
-        "param_names": [],
-        "params": [],
+        "param_names": [
+            "alloc",
+            "size",
+            "access"
+        ],
+        "params": [
+            [
+                "'empty'",
+                "'zeros'"
+            ],
+            [
+                "4",
+                "64",
+                "1024"
+            ],
+            [
+                "'fill'",
+                "'write_one'"
+            ]
+        ],
         "repeat": 8,
         "rounds": 2,
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "a34a376ecdf821e49424cf9e47bbb622daa67a65131edf91c9b03977e4f5b4a6",
+        "version": "6ef50d2d86d00913826d06853cb27c475afcde9898eeddd09d657ce809f00834",
         "warmup_time": -1
     },
     "floordiv.SignedFloorDivCPU.time_division": {

@@ -1,19 +1,19 @@
 {
   "backfill": 0,
-  "free_gb": 204.4,
+  "free_gb": 204.2,
   "fs_errors": 0,
   "gapfill": {
-    "commits": 525,
-    "gaps": 22572,
+    "commits": 524,
+    "gaps": 22517,
     "given_up": 0
   },
   "last_cycle": "ok",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": null,
-  "problem_since": null,
+  "problem": "previous gap-fill batch interrupted after 0.2h",
+  "problem_since": "2026-11-14T06:08:12Z",
   "queue": 0,
-  "updated": "2026-11-14T04:21:24Z",
+  "updated": "2026-11-14T06:08:12Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",
@@ -22,5 +22,5 @@
     "python": "3.12.15"
   },
   "xid": 0,
-  "xid_app": 4
+  "xid_app": 0
 }

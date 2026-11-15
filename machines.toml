@@ -1,9 +1,9 @@
-[machines.ershi-asv-runner]
-active = false            # retired 2026-11-01; data stays published
-max_age_hours = 48        # no commit for this machine (results or heartbeat) -> fails
-max_unhealthy_hours = 24  # status.json reporting a problem this long -> fails
+# Hidden machines (removed from this file; their data stays on `results`):
+#   ershi-asv-runner (L40): retired 2026-11-01, hidden 2026-11-15. Full results
+#   with samples are in s3://asv/results/ershi-asv-runner/. To show it again,
+#   restore its table (active = false) from git history.
 
 [machines.rtx-pro-4500]
 active = true
-max_age_hours = 48
-max_unhealthy_hours = 24
+max_age_hours = 48        # no commit for this machine (results or heartbeat) -> fails
+max_unhealthy_hours = 24  # status.json reporting a problem this long -> fails

@@ -51,7 +51,7 @@
             ]
         ],
         "repeat": 15,
-        "rounds": 2,
+        "rounds": 4,
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
@@ -465,7 +465,7 @@
             ]
         ],
         "repeat": 15,
-        "rounds": 2,
+        "rounds": 4,
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
@@ -2758,7 +2758,7 @@
         "param_names": [],
         "params": [],
         "repeat": 15,
-        "rounds": 2,
+        "rounds": 4,
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",

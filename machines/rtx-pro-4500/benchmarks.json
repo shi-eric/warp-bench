@@ -500,10 +500,10 @@
         "warmup_time": -1
     },
     "atomics.AtomicMax.time_cuda": {
-        "code": "class AtomicMax:\n    def time_cuda(self, vals_np_dict, dtype_str):\n        self.out.fill_(self.init_value)\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    def setup(self, vals_np_dict, dtype_str):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        dtype = DTYPE_MAP[dtype_str]\n    \n        self.init_value = MAX_INIT[dtype_str]\n        self.vals, self.out, self.cmd = _get_launch(\n            max_kernel, vals_np_dict[dtype_str], dtype, self.device, self.init_value\n        )\n\n    def setup_cache(self):\n        rng = np.random.default_rng(42)\n        # Generate vals_np for each dtype in DTYPE_MAP\n        vals_np_dict = {}\n        for dtype_str_key, dtype in DTYPE_MAP.items():\n            if dtype == wp.float32:\n                vals_np = rng.random(self.num_elements).astype(np.float32)\n            elif dtype == wp.int32:\n                vals_np = rng.integers(0, 2**31 - 1, size=self.num_elements, dtype=np.int32)\n            else:\n                vals_np = None\n            vals_np_dict[dtype_str_key] = vals_np\n    \n        return vals_np_dict",
+        "code": "class AtomicMax:\n    def time_cuda(self, vals_np_dict, dtype_str):\n        self.out.fill_(self.init_value)\n        self.cmd.launch()\n\n    def setup(self, vals_np_dict, dtype_str):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        dtype = DTYPE_MAP[dtype_str]\n    \n        self.init_value = MAX_INIT[dtype_str]\n        self.vals, self.out, self.cmd = _get_launch(\n            max_kernel, vals_np_dict[dtype_str], dtype, self.device, self.init_value\n        )\n\n    def setup_cache(self):\n        rng = np.random.default_rng(42)\n        # Generate vals_np for each dtype in DTYPE_MAP\n        vals_np_dict = {}\n        for dtype_str_key, dtype in DTYPE_MAP.items():\n            if dtype == wp.float32:\n                vals_np = np.sort(rng.random(NUM_ELEMENTS).astype(np.float32))\n            elif dtype == wp.int32:\n                vals_np = np.sort(rng.integers(0, 2**31 - 1, size=NUM_ELEMENTS, dtype=np.int32))\n            else:\n                vals_np = None\n            vals_np_dict[dtype_str_key] = vals_np\n    \n        return vals_np_dict",
         "min_run_count": 2,
         "name": "atomics.AtomicMax.time_cuda",
-        "number": 15,
+        "number": 1,
         "param_names": [
             "dtype"
         ],
@@ -513,20 +513,20 @@
                 "'int32'"
             ]
         ],
-        "repeat": 50,
+        "repeat": 20,
         "rounds": 2,
         "sample_time": 0.01,
-        "setup_cache_key": "atomics:106",
+        "setup_cache_key": "atomics:108",
         "type": "time",
         "unit": "seconds",
-        "version": "e26cc540ff36f9c6bac4dd5191cd19f3e13946bd1b9b40c908a6cb14b8b18aae",
+        "version": "c383a710f1faad91b55f9ead90c10f0f7ba2ab0d59a58b0f347557e54b39444d",
         "warmup_time": -1
     },
     "atomics.AtomicMin.time_cuda": {
-        "code": "class AtomicMin:\n    def time_cuda(self, vals_np_dict, dtype_str):\n        self.out.fill_(self.init_value)\n        self.cmd.launch()\n        wp.synchronize_device(self.device)\n\n    def setup(self, vals_np_dict, dtype_str):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        dtype = DTYPE_MAP[dtype_str]\n    \n        self.init_value = MIN_INIT[dtype_str]\n        self.vals, self.out, self.cmd = _get_launch(\n            min_kernel, vals_np_dict[dtype_str], dtype, self.device, self.init_value\n        )\n\n    def setup_cache(self):\n        rng = np.random.default_rng(42)\n        # Generate vals_np for each dtype in DTYPE_MAP\n        vals_np_dict = {}\n        for dtype_str_key, dtype in DTYPE_MAP.items():\n            if dtype == wp.float32:\n                vals_np = rng.random(NUM_ELEMENTS).astype(np.float32)\n            elif dtype == wp.int32:\n                vals_np = rng.integers(0, 2**31 - 1, size=NUM_ELEMENTS, dtype=np.int32)\n            else:\n                vals_np = None\n            vals_np_dict[dtype_str_key] = vals_np\n    \n        return vals_np_dict",
+        "code": "class AtomicMin:\n    def time_cuda(self, vals_np_dict, dtype_str):\n        self.out.fill_(self.init_value)\n        self.cmd.launch()\n\n    def setup(self, vals_np_dict, dtype_str):\n        wp.init()\n        self.device = wp.get_device(\"cuda:0\")\n    \n        dtype = DTYPE_MAP[dtype_str]\n    \n        self.init_value = MIN_INIT[dtype_str]\n        self.vals, self.out, self.cmd = _get_launch(\n            min_kernel, vals_np_dict[dtype_str], dtype, self.device, self.init_value\n        )\n\n    def setup_cache(self):\n        rng = np.random.default_rng(42)\n        # Generate vals_np for each dtype in DTYPE_MAP\n        vals_np_dict = {}\n        for dtype_str_key, dtype in DTYPE_MAP.items():\n            if dtype == wp.float32:\n                vals_np = np.sort(rng.random(NUM_ELEMENTS).astype(np.float32))[::-1].copy()\n            elif dtype == wp.int32:\n                vals_np = np.sort(rng.integers(0, 2**31 - 1, size=NUM_ELEMENTS, dtype=np.int32))[::-1].copy()\n            else:\n                vals_np = None\n            vals_np_dict[dtype_str_key] = vals_np\n    \n        return vals_np_dict",
         "min_run_count": 2,
         "name": "atomics.AtomicMin.time_cuda",
-        "number": 25,
+        "number": 1,
         "param_names": [
             "dtype"
         ],
@@ -536,13 +536,13 @@
                 "'int32'"
             ]
         ],
-        "repeat": 100,
+        "repeat": 20,
         "rounds": 2,
         "sample_time": 0.01,
-        "setup_cache_key": "atomics:150",
+        "setup_cache_key": "atomics:149",
         "type": "time",
         "unit": "seconds",
-        "version": "9bf718a12a4d11d0d4e95b44ba01665dd78a42fc19551ab73339802a6b45963b",
+        "version": "384bc49a6176420dccf74fbcc2b5ba3cfa24ac753bc74296d83061f72c5cb7d3",
         "warmup_time": -1
     },
     "bvh_build.BvhBuild.time_build": {
@@ -1349,7 +1349,7 @@
         "warmup_time": -1
     },
     "fixedarray.FixedArrayCUDA.time_cuda": {
-        "code": "class FixedArrayCUDA:\n    def time_cuda(self, alloc, size, access):\n        self.command.launch()\n\n    @setup_once\n    def setup(self, alloc, size, access):\n        if alloc not in wp._src.context.builtin_functions:\n            raise NotImplementedError(f\"the wp.{alloc}() built-in is not available in this Warp version\")\n    \n        device = wp.get_device(\"cuda:0\")\n        kernel = _KERNEL_FACTORIES[alloc](size)[access]\n        self.output = wp.empty(NUM_THREADS, dtype=float, device=device)\n        self.command = wp.launch(\n            kernel,\n            dim=NUM_THREADS,\n            outputs=[self.output],\n            device=device,\n            record_cmd=True,\n        )\n        for _ in range(5):\n            self.command.launch()\n    \n        np.testing.assert_array_equal(self.output.numpy(), _expected_output(size, access))",
+        "code": "class FixedArrayCUDA:\n    def time_cuda(self, alloc, size, access):\n        wp.capture_launch(self.graph)\n\n    @setup_once\n    def setup(self, alloc, size, access):\n        if alloc not in wp._src.context.builtin_functions:\n            raise NotImplementedError(f\"the wp.{alloc}() built-in is not available in this Warp version\")\n    \n        device = wp.get_device(\"cuda:0\")\n        kernel = _KERNEL_FACTORIES[alloc](size)[access]\n        self.output = wp.empty(NUM_THREADS, dtype=float, device=device)\n        self.command = wp.launch(\n            kernel,\n            dim=NUM_THREADS,\n            outputs=[self.output],\n            device=device,\n            record_cmd=True,\n        )\n        for _ in range(5):\n            self.command.launch()\n    \n        np.testing.assert_array_equal(self.output.numpy(), _expected_output(size, access))\n    \n        # A single launch is so short that the host's time to start it, which\n        # differs between processes, would be a large share of each sample, so\n        # each sample replays a graph of launches. Kernels with 1024-element\n        # arrays run long enough that a few launches suffice.\n        launches = 256 if size < 1024 else 16\n        self.graph = capture_launches(self.command.launch, launches)\n        wp.capture_launch(self.graph)",
         "min_run_count": 2,
         "name": "fixedarray.FixedArrayCUDA.time_cuda",
         "number": 1,
@@ -1378,7 +1378,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "6ef50d2d86d00913826d06853cb27c475afcde9898eeddd09d657ce809f00834",
+        "version": "2a39a8b670083d844e52b6d1f7c6809dc2e67730aa5cba1dac622836411490f8",
         "warmup_time": -1
     },
     "floordiv.SignedFloorDivCPU.time_division": {

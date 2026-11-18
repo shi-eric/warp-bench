@@ -992,7 +992,7 @@
         "warmup_time": -1
     },
     "compile_conditional.CompileNestedSearch.timeraw_cuda": {
-        "code": "class CompileNestedSearch:\n    def timeraw_cuda(self):\n        # ASV runs each sample in a fresh process. Keep initialization outside\n        # timing, disable NVRTC's own cache before CUDA initializes, and avoid\n        # clearing the kernel cache shared by other benchmarks.\n        return (\n            \"wp.load_module(module=nested_search.module, device='cuda:0')\",\n            f\"\"\"\n            import os\n            import sys\n            from tempfile import TemporaryDirectory\n    \n            os.environ[\"CUDA_CACHE_DISABLE\"] = \"1\"\n            sys.path.insert(0, {str(Path(__file__).resolve().parent)!r})\n    \n            import warp as wp\n    \n            wp.config.log_level = wp.LOG_WARNING\n            cache = TemporaryDirectory(prefix=\"warp-asv-compile-\")\n            wp.config.kernel_cache_dir = cache.name\n            wp.config.use_precompiled_headers = False\n            wp.config.cuda_output = \"cubin\"\n            wp.config.mode = \"release\"\n            wp.init()\n    \n            from compile_conditional import nested_search\n            \"\"\",\n        )",
+        "code": "class CompileNestedSearch:\n    def timeraw_cuda(self):\n        # ASV runs each sample in a fresh process. Keep initialization outside\n        # timing, disable NVRTC's own cache before CUDA initializes, and avoid\n        # clearing the kernel cache shared by other benchmarks. ASV embeds the\n        # setup in a string literal, which decodes its escapes a second time,\n        # so the path must not contain Windows backslashes.\n        return (\n            \"wp.load_module(module=nested_search.module, device='cuda:0')\",\n            f\"\"\"\n            import os\n            import sys\n            from tempfile import TemporaryDirectory\n    \n            os.environ[\"CUDA_CACHE_DISABLE\"] = \"1\"\n            sys.path.insert(0, {Path(__file__).resolve().parent.as_posix()!r})\n    \n            import warp as wp\n    \n            wp.config.log_level = wp.LOG_WARNING\n            cache = TemporaryDirectory(prefix=\"warp-asv-compile-\")\n            wp.config.kernel_cache_dir = cache.name\n            wp.config.use_precompiled_headers = False\n            wp.config.cuda_output = \"cubin\"\n            wp.config.mode = \"release\"\n            wp.init()\n    \n            from compile_conditional import nested_search\n            \"\"\",\n        )",
         "min_run_count": 2,
         "name": "compile_conditional.CompileNestedSearch.timeraw_cuda",
         "number": 1,
@@ -1004,7 +1004,7 @@
         "timeout": 120,
         "type": "time",
         "unit": "seconds",
-        "version": "4b786c5f44359754c2ceae35b71c7c99a495b891849048a8a03c504b7740ab4c",
+        "version": "5ff9edf60d8933017be0bc7781ab382c84c7613b9053cde6d773521a9a3cee24",
         "warmup_time": 0
     },
     "control_flow.DivergentLoopCUDA.time_loop": {

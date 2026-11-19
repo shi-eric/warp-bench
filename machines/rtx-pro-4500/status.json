@@ -1,10 +1,10 @@
 {
   "backfill": 0,
-  "free_gb": 198.7,
+  "free_gb": 198.1,
   "fs_errors": 0,
   "gapfill": {
-    "commits": 474,
-    "gaps": 13719,
+    "commits": 617,
+    "gaps": 14336,
     "given_up": 0
   },
   "last_cycle": "ok",
@@ -13,7 +13,7 @@
   "problem": null,
   "problem_since": null,
   "queue": 0,
-  "updated": "2026-11-19T06:51:06Z",
+  "updated": "2026-11-19T08:05:56Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",

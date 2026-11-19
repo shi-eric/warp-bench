@@ -1512,6 +1512,54 @@
         "unit": "bytes",
         "version": "a8448562e7b2c8b003320baada82ec6f7285db7fbf571608ee67e2e1336fa0d7"
     },
+    "optim.cg_multi_rhs.CGMultiRHS.time_prepared": {
+        "code": "class CGMultiRHS:\n    def time_prepared(self, nrhs):\n        wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, nrhs):\n        if not hasattr(linear, \"KrylovSolve\"):\n            raise NotImplementedError(\"linear.KrylovSolve is not available\")\n        self.device = wp.get_device(\"cuda:0\")\n        with wp.ScopedDevice(self.device):\n            # The captured graph addresses these arrays, so they must stay alive.\n            self.a, self.b = problem(nrhs)\n            self.out = wp.empty_like(self.b)\n            self.action = linear.KrylovSolve(self.a, nrhs, method=\"cg\", working_dtype=wp.float32, tol=1e-5, maxiter=100)\n            self.action.solve(self.b, self.out)\n            wp.synchronize_device(self.device)\n            with wp.ScopedCapture(force_module_load=False) as capture:\n                self.action.solve(self.b, self.out)\n            self.graph = capture.graph\n            wp.capture_launch(self.graph)\n            wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "optim.cg_multi_rhs.CGMultiRHS.time_prepared",
+        "number": 1,
+        "param_names": [
+            "nrhs"
+        ],
+        "params": [
+            [
+                "4",
+                "8",
+                "24",
+                "33"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "99ed1520c485e80d7a46b656faf1cf8c29ecd8469a6bce8a3bfb4afee12675c2",
+        "warmup_time": -1
+    },
+    "optim.gmres_solve.GMRESSolve.time_prepared": {
+        "code": "class GMRESSolve:\n    def time_prepared(self, nrhs):\n        wp.capture_launch(self.graph)\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, nrhs):\n        if not hasattr(linear, \"KrylovSolve\"):\n            raise NotImplementedError(\"linear.KrylovSolve is not available\")\n        self.device = wp.get_device(\"cuda:0\")\n        with wp.ScopedDevice(self.device):\n            # The captured graph addresses these arrays, so they must stay alive.\n            self.a, self.b = problem(nrhs)\n            self.out = wp.empty_like(self.b)\n            self.action = linear.KrylovSolve(\n                self.a,\n                nrhs,\n                method=\"gmres\",\n                tol=1e-10,\n                maxiter=256,\n                restart=32,\n                residual=\"fresh\",\n            )\n            self.action.solve(self.b, self.out)\n            wp.synchronize_device(self.device)\n            with wp.ScopedCapture(force_module_load=False) as capture:\n                self.action.solve(self.b, self.out)\n            self.graph = capture.graph\n            wp.capture_launch(self.graph)\n            wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "optim.gmres_solve.GMRESSolve.time_prepared",
+        "number": 1,
+        "param_names": [
+            "nrhs"
+        ],
+        "params": [
+            [
+                "4",
+                "8",
+                "24",
+                "33"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "a0473438a324ffd56d1d67e2fb6e524cbfbda7101e425f5503345a61b213370b",
+        "warmup_time": -1
+    },
     "optim.linear.LinearSolverCg.time_solve": {
         "code": "class LinearSolverCg:\n    def time_solve(self, mode):\n        self._solve()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self, mode):\n        wp.init()\n        self.device = _get_device(\"cuda\" if mode == \"cuda\" else \"cpu\")\n        self.use_cuda_graph = True if mode == \"cpu_graph\" else None\n    \n        self.A = _laplacian_2d(LAPLACIAN_RES, self.device)\n        self.M = preconditioner(self.A, \"diag\")\n        rhs = np.random.default_rng(42).standard_normal(self.A.shape[0]).astype(np.float32)\n        self.b = wp.array(rhs, device=self.device)\n        self.x = wp.zeros_like(self.b)\n    \n        iterations, residual_norm, _ = self._solve()\n        if iterations != CG_ITERATIONS or not residual_norm < 1.0e-2 * np.linalg.norm(rhs):\n            raise RuntimeError(f\"unexpected CG result: {iterations} iterations, residual norm {residual_norm}\")",
         "min_run_count": 2,
@@ -2525,6 +2573,38 @@
         "type": "time",
         "unit": "seconds",
         "version": "a89d365905204dfc13348550a8c56841ef74b92654b242a0a4a96cf362ab3c12",
+        "warmup_time": -1
+    },
+    "tile.ldlt.TileLDLT.time_cuda": {
+        "code": "class TileLDLT:\n    def time_cuda(self, workload, algorithm):\n        wp.capture_launch(self.graph)\n\n    @setup_once\n    def setup(self, workload, algorithm):\n        n, batches, precision, block_dim, family = workload\n        wp.init()\n        if not wp.is_cuda_available():\n            raise NotImplementedError(\"Requires CUDA\")\n        if algorithm == \"lu_mathdx\" and not wp._src.context.runtime.core.wp_is_mathdx_enabled():\n            raise NotImplementedError(\"Requires MathDx\")\n        dtype = getattr(wp, precision)\n        kernel = make_factor_kernel(n, dtype, algorithm)\n        self.device = wp.get_device(\"cuda:0\")\n        self.matrices = wp.array(symmetric_indefinite_matrices(n, batches, family), dtype=dtype, device=self.device)\n        self.factors = wp.empty_like(self.matrices)\n        self.pivots = wp.empty((batches, n), dtype=wp.int32, device=self.device)\n        self.status = wp.empty((batches, 1), dtype=wp.int32, device=self.device)\n        self.command = wp.launch_tiled(\n            kernel,\n            dim=batches,\n            inputs=[self.matrices, self.factors, self.pivots, self.status],\n            block_dim=block_dim,\n            device=self.device,\n            record_cmd=True,\n        )\n        self.command.launch()\n        self.graph = capture_launches(self.command.launch, LAUNCHES_PER_SAMPLE, self.device)",
+        "min_run_count": 2,
+        "name": "tile.ldlt.TileLDLT.time_cuda",
+        "number": 0,
+        "param_names": [
+            "workload",
+            "algorithm"
+        ],
+        "params": [
+            [
+                "(8, 1, 'float32', 32, 'diagonal')",
+                "(8, 4096, 'float32', 128, 'random')",
+                "(32, 256, 'float32', 128, 'kkt')",
+                "(32, 256, 'float64', 128, 'random')",
+                "(64, 1, 'float32', 256, 'diagonal')",
+                "(64, 256, 'float64', 256, 'kkt')"
+            ],
+            [
+                "'ldlt'",
+                "'lu_native'",
+                "'lu_mathdx'"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "f8b5d8c497da595d9ca6754768f6268f5e7a7b5b66983fc2980a4f16bec7df3f",
         "warmup_time": -1
     },
     "tile.load_store_coalesced.LoadStoreCoalesced.time_cuda": {

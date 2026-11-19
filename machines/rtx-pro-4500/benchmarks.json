@@ -1647,6 +1647,39 @@
         "version": "17bb3ed93ffd72a27ba723b5ee08de225969bb2851c229f3cd3531a85af05183",
         "warmup_time": -1
     },
+    "sparse.matrix_vector_batch.BsrMvBatch.time_cuda": {
+        "code": "class BsrMvBatch:\n    def time_cuda(self, workload, algorithm):\n        wp.capture_launch(self.graph)\n\n    @setup_once\n    def setup(self, workload, algorithm):\n        if \"algorithm\" not in inspect.signature(wps.bsr_mv).parameters:\n            raise NotImplementedError(\"Batched bsr_mv is not available\")\n        problem, nrhs, dtype = workload\n        if nrhs == 1 and algorithm == \"columns\":\n            # A single vector would only measure the transpose overhead.\n            raise NotImplementedError(\"'columns' is not benchmarked for a single vector\")\n        self.device = wp.get_device(\"cuda:0\")\n        with wp.ScopedDevice(self.device):\n            self.a = build(problem, getattr(wp, dtype))\n            self.x = wp.ones((nrhs, self.a.shape[1]), dtype=self.a.scalar_type)\n            self.y = wp.zeros((nrhs, self.a.shape[0]), dtype=self.a.scalar_type)\n            self.work = wp.empty(nrhs * (self.a.shape[0] + self.a.shape[1]), dtype=self.a.scalar_type)\n    \n            def product():\n                wps.bsr_mv(self.a, self.x, self.y, algorithm=algorithm, work_buffer=self.work)\n    \n            try:\n                product()\n            except ValueError as error:\n                raise NotImplementedError(str(error)) from error\n            self.graph = capture_launches(product, PRODUCTS)\n            wp.capture_launch(self.graph)\n            wp.synchronize_device(self.device)",
+        "min_run_count": 2,
+        "name": "sparse.matrix_vector_batch.BsrMvBatch.time_cuda",
+        "number": 1,
+        "param_names": [
+            "workload",
+            "algorithm"
+        ],
+        "params": [
+            [
+                "('poisson3d', 1, 'float32')",
+                "('poisson3d', 8, 'float32')",
+                "('poisson3d', 64, 'float32')",
+                "('elastic3d', 8, 'float32')",
+                "('elastic3d', 8, 'float64')",
+                "('irregular', 8, 'float32')",
+                "('warpack', 33, 'float64')"
+            ],
+            [
+                "'loop'",
+                "'rows'",
+                "'columns'"
+            ]
+        ],
+        "repeat": 10,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "a02b4cd1b90a4ec1ed12496c7aeac924f3879f8369dfd7d952e6af952f7675f8",
+        "warmup_time": -1
+    },
     "sparse.row_capacity.BsrAxpyPaddedMergeWideRows.time_cuda": {
         "code": "class BsrAxpyPaddedMergeWideRows:\n    def time_cuda(self):\n        self._run_impl()\n        wp.synchronize_device(self.device)\n\n    @setup_once\n    def setup(self):\n        self.device = _setup_device()\n    \n        with wp.ScopedDevice(self.device):\n            self._x = _make_row_capacity_matrix(\n                32768, 32768, active_per_row=16, capacity_per_row=16, device=self.device, col_shift=8\n            )\n            self._y = _make_row_capacity_matrix(\n                32768, 32768, active_per_row=16, capacity_per_row=64, device=self.device\n            )\n            self._work = wps.bsr_axpy_work_arrays()\n            self._run_impl()\n    \n        wp.synchronize_device(self.device)",
         "min_run_count": 2,

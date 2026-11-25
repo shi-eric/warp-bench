@@ -6,10 +6,10 @@
   "last_cycle": "skipped",
   "machine": "rtx-pro-4500",
   "oom": 0,
-  "problem": "warp fetch failed: Downloading docs/img/examples/interop_cutile_neural_sdf.png (44 KB)",
+  "problem": "warp fetch failed: error: Your local changes to the following files would be overwritten by checkout:",
   "problem_since": "2026-11-25T23:22:30Z",
   "queue": null,
-  "updated": "2026-11-25T23:22:30Z",
+  "updated": "2026-11-25T23:28:00Z",
   "versions": {
     "asv": "0.6.5",
     "cuda": "13.4",
